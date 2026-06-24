@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>io.github.henrylinyy.qwable.gateway</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/yourname/Documents/qwable/.venv/bin/python</string>
+        <string>-m</string>
+        <string>qwable.cli</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/yourname/Documents/qwable</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/yourname/Library/Logs/qwable-gateway.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/yourname/Library/Logs/qwable-gateway.err.log</string>
+</dict>
+</plist>

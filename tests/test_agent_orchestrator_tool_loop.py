@@ -1,0 +1,31 @@
+"""Acceptance split tests for agent orchestrator tool-loop flow."""
+
+from tests import test_agent_orchestrator as orchestrator_tests
+
+
+async def test_invalid_executor_tool_call_returns_blocked_final_answer(tmp_path):
+    await orchestrator_tests.test_invalid_executor_tool_call_returns_blocked_final_answer(tmp_path)
+
+
+async def test_call_with_fallback_tries_next_model_after_failure(tmp_path):
+    await orchestrator_tests.test_call_with_fallback_tries_next_model_after_failure(tmp_path)
+
+
+async def test_tool_result_continuation_appends_evidence_and_requests_coding_tests(tmp_path):
+    await orchestrator_tests.test_tool_result_continuation_appends_evidence_and_requests_coding_tests(tmp_path)
+
+
+async def test_coding_workflow_advances_to_next_step_after_tool_result(tmp_path):
+    await orchestrator_tests.test_coding_workflow_advances_to_next_step_after_tool_result(tmp_path)
+
+
+async def test_agentic_workflow_advances_tool_steps_without_requesting_tests(tmp_path):
+    await orchestrator_tests.test_agentic_workflow_advances_tool_steps_without_requesting_tests(tmp_path)
+
+
+async def test_coding_workflow_blocks_when_tool_call_limit_would_be_exceeded(tmp_path):
+    await orchestrator_tests.test_coding_workflow_blocks_when_tool_call_limit_would_be_exceeded(tmp_path)
+
+
+async def test_coding_workflow_requires_tests_after_mutating_step(tmp_path):
+    await orchestrator_tests.test_coding_workflow_requires_tests_after_mutating_step(tmp_path)

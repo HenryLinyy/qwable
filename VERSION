@@ -1,0 +1,4 @@
+Qwable v1.8.0
+Built: 2026-06-25
+Gates: G09 (LM Studio routing) + G10 (fusion deliberation) + G11 (MLX formatter + pre-warm + streaming) + G12 (panel streaming + Anthropic + presets + last-resident + judge fallback) + G13 (Python SDK + Responses streaming + retry) + G14 (Web UI + persistent context + CI) + G15 (MLX deep ops) + v1.8 agent runtime with Qwable-first executor/repair stage routing
+Tests: 521 passing

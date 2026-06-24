@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+
+# Local env / secrets (keep .env.example tracked)
+.env
+!.env.example
+
+# Logs
+*.log
+
+# Agent runtime store (created at runtime in cwd)
+*.sqlite3
+.qwable_agent_runs.sqlite3
+
+# macOS
+.DS_Store
+
+# Node (demo recorder tooling — see scripts/record_demo.mjs)
+node_modules/
+.demo_tmp/
+assets/demo.webm
