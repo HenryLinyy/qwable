@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/qwable.jpg" alt="Qwable" width="200">
+</p>
+
 # Qwable
 
 [English](README.md) · [繁體中文](README.zh-TW.md) · [Installation guide](INSTALL.en.md)
