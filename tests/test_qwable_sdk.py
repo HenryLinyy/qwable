@@ -1,4 +1,4 @@
-"""G13-1: tests for LocalFusionSDK."""
+"""G13-1: tests for QwableSDK."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -7,7 +7,7 @@ import pytest
 
 from qwable_sdk import (
     FusionPreset,
-    LocalFusionClient,
+    QwableClient,
 )
 
 
@@ -27,7 +27,7 @@ def _mock_response(json_data: dict, status_code: int = 200) -> MagicMock:
 
 def test_client_initialization():
     """Default base_url, timeout, max_tokens."""
-    client = LocalFusionClient()
+    client = QwableClient()
     assert client.base_url == "http://127.0.0.1:8088"
     assert client.timeout == 300.0
     assert client.max_tokens == 4000
@@ -35,13 +35,13 @@ def test_client_initialization():
 
 def test_client_custom_init():
     """Custom base_url strips trailing slash."""
-    client = LocalFusionClient(base_url="http://example.com:9000/", timeout=60.0)
+    client = QwableClient(base_url="http://example.com:9000/", timeout=60.0)
     assert client.base_url == "http://example.com:9000"
 
 
 def test_list_presets_calls_correct_endpoint():
     """list_presets() hits GET /v1/fusion/presets."""
-    client = LocalFusionClient()
+    client = QwableClient()
     mock_resp = _mock_response(
         {
             "presets": {"quality": {"panel": ["a", "b"]}},
@@ -58,7 +58,7 @@ def test_list_presets_calls_correct_endpoint():
 
 def test_fusion_chat_non_streaming_builds_correct_body():
     """fusion_chat() sends correct payload shape."""
-    client = LocalFusionClient()
+    client = QwableClient()
     mock_resp = _mock_response(
         {
             "choices": [
@@ -86,7 +86,7 @@ def test_fusion_chat_non_streaming_builds_correct_body():
 
 def test_fusion_chat_with_custom_panel():
     """Custom preset requires analysis_models + judge_model."""
-    client = LocalFusionClient()
+    client = QwableClient()
     mock_resp = _mock_response(
         {"choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}]}
     )
@@ -107,7 +107,7 @@ def test_fusion_chat_with_custom_panel():
 
 def test_fusion_chat_string_preset_accepted():
     """preset can be a string in addition to FusionPreset enum."""
-    client = LocalFusionClient()
+    client = QwableClient()
     mock_resp = _mock_response({"choices": [{"message": {"content": "ok"}}]})
     with patch("httpx.Client") as MockClient:
         ctx = MockClient.return_value.__enter__.return_value
@@ -122,7 +122,7 @@ def test_fusion_chat_string_preset_accepted():
 
 def test_fusion_chat_stream_yields_judge_tokens():
     """Stream parses SSE data lines into FusionEvent with judge.delta."""
-    client = LocalFusionClient()
+    client = QwableClient()
     sse_lines = [
         'data: {"choices":[{"delta":{"content":"Hello "},"finish_reason":null}]}',
         'data: {"choices":[{"delta":{"content":"world"},"finish_reason":null}]}',
@@ -156,7 +156,7 @@ def test_fusion_chat_stream_yields_judge_tokens():
 
 def test_fusion_chat_stream_skips_sse_comments():
     """Lines starting with ':' (fusion panel events) are ignored by SDK."""
-    client = LocalFusionClient()
+    client = QwableClient()
     sse_lines = [
         'data: {"choices":[{"delta":{"content":"real token"}}]}',
         'data: {"choices":[{"delta":{},"finish_reason":"stop"}]}',
@@ -185,7 +185,7 @@ def test_fusion_chat_stream_skips_sse_comments():
 
 def test_fusion_chat_raises_on_http_error():
     """4xx/5xx responses raise HTTPStatusError."""
-    client = LocalFusionClient()
+    client = QwableClient()
     mock_resp = _mock_response({"error": "bad preset"}, status_code=400)
     with patch("httpx.Client") as MockClient:
         ctx = MockClient.return_value.__enter__.return_value
@@ -200,7 +200,7 @@ def test_fusion_chat_raises_on_http_error():
 @pytest.mark.asyncio
 async def test_afusion_chat_non_streaming():
     """Async non-streaming variant."""
-    client = LocalFusionClient()
+    client = QwableClient()
 
     # Build an async context manager that yields our mock response
     mock_resp = MagicMock()

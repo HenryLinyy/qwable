@@ -1,9 +1,9 @@
 """Qwable SDK — Python client for the Qwable Agent Gateway v1.5.
 
 Public surface:
-    from qwable_sdk import LocalFusionClient, FusionPreset, FusionEvent
+    from qwable_sdk import QwableClient, FusionPreset, FusionEvent
 
-    client = LocalFusionClient("http://127.0.0.1:8088")
+    client = QwableClient("http://127.0.0.1:8088")
 
     # Non-streaming
     result = client.fusion_chat(
@@ -31,7 +31,7 @@ Public surface:
     )
 """
 
-from qwable_sdk.client import LocalFusionClient
+from qwable_sdk.client import QwableClient
 from qwable_sdk.events import (
     FusionEvent,
     PanelEvent,
@@ -47,7 +47,7 @@ from qwable_sdk.types import (
 
 
 __all__ = [
-    "LocalFusionClient",
+    "QwableClient",
     "FusionEvent",
     "PanelEvent",
     "JudgeEvent",

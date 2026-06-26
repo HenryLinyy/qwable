@@ -1,6 +1,6 @@
 """Fusion deliberation streaming event types (SDK side).
 
-These dataclasses are returned by `LocalFusionClient.fusion_chat_stream()`.
+These dataclasses are returned by `QwableClient.fusion_chat_stream()`.
 Each event corresponds to a `FusionStreamEvent` emitted by the gateway.
 
 Event types (mirrors `qwable.streaming_events`):
