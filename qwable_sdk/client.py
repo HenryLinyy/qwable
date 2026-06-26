@@ -8,9 +8,9 @@ Thin wrapper around the gateway HTTP API. Handles:
   - list_presets() → introspection of gateway state
 
 Usage:
-    from qwable_sdk import LocalFusionClient, FusionPreset
+    from qwable_sdk import QwableClient, FusionPreset
 
-    client = LocalFusionClient()
+    client = QwableClient()
     presets = client.list_presets()
     print(presets["presets"]["quality"]["panel"])
 
@@ -38,7 +38,7 @@ MODEL_OPENAI = "qwable-fusion"
 MODEL_ANTHROPIC = "claude-qwable-fusion"
 
 
-class LocalFusionClient:
+class QwableClient:
     """Python client for Qwable Agent Gateway.
 
     Parameters:
