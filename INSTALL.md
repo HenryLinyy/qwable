@@ -218,9 +218,9 @@ curl http://127.0.0.1:8088/v1/fusion/presets | python3 -m json.tool | head -30
 ### Python SDK（推薦）
 
 ```python
-from qwable_sdk import LocalFusionClient, FusionPreset
+from qwable_sdk import QwableClient, FusionPreset
 
-client = LocalFusionClient("http://127.0.0.1:8088")
+client = QwableClient("http://127.0.0.1:8088")
 
 # 列出 presets
 presets = client.list_presets()
@@ -424,7 +424,7 @@ qwable-agent-gateway-m5/
 │   └── ...                     ← (其他輔助模組)
 ├── qwable_sdk/           ← Python client library
 │   ├── __init__.py
-│   ├── client.py               ← LocalFusionClient
+│   ├── client.py               ← QwableClient
 │   ├── events.py               ← Event dataclasses
 │   └── types.py                ← FusionPreset enum + FusionResult
 ├── scripts/                    ← 啟動 / warmup / E2E
