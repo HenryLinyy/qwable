@@ -1,13 +1,14 @@
 """Core data structures for Qwable Agent Gateway."""
 
 from dataclasses import dataclass
-from typing import Literal, Optional
+from typing import Literal
 from qwable.vision import ImageInput, VisionEvidence
 
 
 @dataclass
 class ToolSpec:
     """Normalized tool specification from any protocol."""
+
     name: str
     description: str | None
     input_schema: dict
@@ -18,6 +19,7 @@ class ToolSpec:
 @dataclass
 class ToolResult:
     """Normalized tool result from any protocol."""
+
     tool_call_id: str | None
     name: str | None
     content: str
@@ -29,6 +31,7 @@ class ToolResult:
 @dataclass
 class ParsedAgentTask:
     """Parsed incoming request into a unified internal format."""
+
     text: str
     tools: list[ToolSpec]
     tool_results: list[ToolResult]
@@ -49,6 +52,7 @@ class ParsedAgentTask:
 @dataclass
 class FusionAction:
     """Unified action output from fusion core."""
+
     type: Literal["final_answer", "tool_call"]
     text: str | None
     tool_name: str | None

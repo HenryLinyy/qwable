@@ -2,8 +2,6 @@
 
 from unittest.mock import MagicMock
 
-import pytest
-
 
 def test_v1_fusion_presets_returns_4_presets(monkeypatch):
     """Endpoint should return all 4 presets with panel/judge info."""
@@ -16,6 +14,7 @@ def test_v1_fusion_presets_returns_4_presets(monkeypatch):
         m = MagicMock()
         m.stdout = "No models are currently loaded.\n"
         return m
+
     monkeypatch.setattr("subprocess.run", fake_subprocess_run)
 
     config = FusionConfig()
@@ -25,6 +24,7 @@ def test_v1_fusion_presets_returns_4_presets(monkeypatch):
     server_mod.fusion_core = fc
 
     from fastapi.testclient import TestClient
+
     client = TestClient(server_mod.app)
     response = client.get("/v1/fusion/presets")
     assert response.status_code == 200
@@ -34,7 +34,9 @@ def test_v1_fusion_presets_returns_4_presets(monkeypatch):
     assert data["presets"]["heavy"]["judge"] == "deepseek-v4-flash"
     assert data["presets"]["heavy"]["judge_backend"] == "ds4"
     assert data["presets"]["budget"]["judge_backend"] == "ollama"
-    assert data["default_preset"] == "budget"  # default lowered to budget for memory safety
+    assert (
+        data["default_preset"] == "budget"
+    )  # default lowered to budget for memory safety
 
 
 def test_v1_fusion_presets_loaded_returns_quick(monkeypatch):
@@ -47,6 +49,7 @@ def test_v1_fusion_presets_loaded_returns_quick(monkeypatch):
         m = MagicMock()
         m.stdout = "qwen/qwen3.6-35b-a3b    qwen/qwen3.6-35b-a3b    IDLE    37.75GB\n"
         return m
+
     monkeypatch.setattr("subprocess.run", fake_subprocess_run)
 
     config = FusionConfig()
@@ -55,6 +58,7 @@ def test_v1_fusion_presets_loaded_returns_quick(monkeypatch):
     server_mod.fusion_core = fc
 
     from fastapi.testclient import TestClient
+
     client = TestClient(server_mod.app)
     response = client.get("/v1/fusion/presets/loaded")
     assert response.status_code == 200
@@ -67,7 +71,6 @@ def test_v1_fusion_presets_includes_ds4_reachability(monkeypatch):
     import qwable.server as server_mod
     from qwable.config import FusionConfig
     from qwable.fusion_core import FusionCore
-    import httpx
 
     def fake_subprocess_run(*args, **kwargs):
         m = MagicMock()
@@ -79,10 +82,17 @@ def test_v1_fusion_presets_includes_ds4_reachability(monkeypatch):
         status_code = 200
 
     class FakeClient:
-        def __init__(self, *args, **kwargs): pass
-        def __enter__(self): return self
-        def __exit__(self, *args): pass
-        def get(self, url): return FakeResp()
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def get(self, url):
+            return FakeResp()
 
     monkeypatch.setattr("subprocess.run", fake_subprocess_run)
     monkeypatch.setattr("httpx.Client", FakeClient)
@@ -93,6 +103,7 @@ def test_v1_fusion_presets_includes_ds4_reachability(monkeypatch):
     server_mod.fusion_core = fc
 
     from fastapi.testclient import TestClient
+
     client = TestClient(server_mod.app)
     response = client.get("/v1/fusion/presets")
     data = response.json()

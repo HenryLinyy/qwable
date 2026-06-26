@@ -78,4 +78,8 @@ class RepoIndex:
         return score
 
     def _tokens(self, text: str) -> set[str]:
-        return {token for token in re.split(r"[^a-zA-Z0-9_]+", (text or "").lower()) if token}
+        return {
+            token
+            for token in re.split(r"[^a-zA-Z0-9_]+", (text or "").lower())
+            if token
+        }

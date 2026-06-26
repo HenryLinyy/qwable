@@ -6,7 +6,6 @@ from LM Studio /v1/chat/completions SSE responses.
 
 from unittest.mock import MagicMock
 
-import pytest
 
 from qwable.models import OllamaClient
 
@@ -14,6 +13,7 @@ from qwable.models import OllamaClient
 def _sse_line(data_obj):
     """Build a single SSE line: 'data: {json}\\n'."""
     import json
+
     return f"data: {json.dumps(data_obj)}\n"
 
 
@@ -46,30 +46,53 @@ def _make_client_with_stream_response(stream_lines):
 
 def test_chat_completion_stream_yields_token_deltas():
     """Each 'data:' line yields (delta, finish_reason)."""
-    client, _ = _make_client_with_stream_response([
-        _sse_line({"choices": [{"delta": {"content": "Hello"}, "finish_reason": None}]}),
-        _sse_line({"choices": [{"delta": {"content": " world"}, "finish_reason": None}]}),
-        _sse_line({"choices": [{"delta": {}, "finish_reason": "stop"}]}),
-    ])
-    chunks = list(client.chat_completion_stream(
-        model="m1",
-        messages=[{"role": "user", "content": "hi"}],
-    ))
+    client, _ = _make_client_with_stream_response(
+        [
+            _sse_line(
+                {"choices": [{"delta": {"content": "Hello"}, "finish_reason": None}]}
+            ),
+            _sse_line(
+                {"choices": [{"delta": {"content": " world"}, "finish_reason": None}]}
+            ),
+            _sse_line({"choices": [{"delta": {}, "finish_reason": "stop"}]}),
+        ]
+    )
+    chunks = list(
+        client.chat_completion_stream(
+            model="m1",
+            messages=[{"role": "user", "content": "hi"}],
+        )
+    )
     assert chunks == [("Hello", None), (" world", None), ("", "stop")]
 
 
 def test_chat_completion_stream_stops_at_done_marker():
     """A 'data: [DONE]' line ends the stream."""
-    client, _ = _make_client_with_stream_response([
-        _sse_line({"choices": [{"delta": {"content": "x"}, "finish_reason": None}]}),
-        "data: [DONE]\n",
-        # Anything after [DONE] should not appear
-        _sse_line({"choices": [{"delta": {"content": "should not appear"}, "finish_reason": None}]}),
-    ])
-    chunks = list(client.chat_completion_stream(
-        model="m1",
-        messages=[{"role": "user", "content": "hi"}],
-    ))
+    client, _ = _make_client_with_stream_response(
+        [
+            _sse_line(
+                {"choices": [{"delta": {"content": "x"}, "finish_reason": None}]}
+            ),
+            "data: [DONE]\n",
+            # Anything after [DONE] should not appear
+            _sse_line(
+                {
+                    "choices": [
+                        {
+                            "delta": {"content": "should not appear"},
+                            "finish_reason": None,
+                        }
+                    ]
+                }
+            ),
+        ]
+    )
+    chunks = list(
+        client.chat_completion_stream(
+            model="m1",
+            messages=[{"role": "user", "content": "hi"}],
+        )
+    )
     # Only one chunk before [DONE]
     assert len(chunks) == 1
     assert chunks[0] == ("x", None)
@@ -77,29 +100,43 @@ def test_chat_completion_stream_stops_at_done_marker():
 
 def test_chat_completion_stream_skips_blank_lines():
     """Blank / comment lines (start with ':') are ignored."""
-    client, _ = _make_client_with_stream_response([
-        "\n",  # blank
-        ": keep-alive\n",  # SSE comment
-        _sse_line({"choices": [{"delta": {"content": "x"}, "finish_reason": None}]}),
-    ])
-    chunks = list(client.chat_completion_stream(
-        model="m1",
-        messages=[{"role": "user", "content": "hi"}],
-    ))
+    client, _ = _make_client_with_stream_response(
+        [
+            "\n",  # blank
+            ": keep-alive\n",  # SSE comment
+            _sse_line(
+                {"choices": [{"delta": {"content": "x"}, "finish_reason": None}]}
+            ),
+        ]
+    )
+    chunks = list(
+        client.chat_completion_stream(
+            model="m1",
+            messages=[{"role": "user", "content": "hi"}],
+        )
+    )
     assert len(chunks) == 1
     assert chunks[0][0] == "x"
 
 
 def test_chat_completion_stream_unicode_safe():
     """Traditional Chinese in deltas must round-trip."""
-    client, _ = _make_client_with_stream_response([
-        _sse_line({"choices": [{"delta": {"content": "繁體中文"}, "finish_reason": None}]}),
-        _sse_line({"choices": [{"delta": {"content": "測試"}, "finish_reason": "stop"}]}),
-    ])
-    chunks = list(client.chat_completion_stream(
-        model="m1",
-        messages=[{"role": "user", "content": "hi"}],
-    ))
+    client, _ = _make_client_with_stream_response(
+        [
+            _sse_line(
+                {"choices": [{"delta": {"content": "繁體中文"}, "finish_reason": None}]}
+            ),
+            _sse_line(
+                {"choices": [{"delta": {"content": "測試"}, "finish_reason": "stop"}]}
+            ),
+        ]
+    )
+    chunks = list(
+        client.chat_completion_stream(
+            model="m1",
+            messages=[{"role": "user", "content": "hi"}],
+        )
+    )
     assert chunks[0][0] == "繁體中文"
     assert chunks[1][0] == "測試"
     assert chunks[1][1] == "stop"
@@ -107,12 +144,16 @@ def test_chat_completion_stream_unicode_safe():
 
 def test_chat_completion_stream_handles_empty_delta():
     """Lines with empty delta are still yielded (finish_reason may be set)."""
-    client, _ = _make_client_with_stream_response([
-        _sse_line({"choices": [{"delta": {}, "finish_reason": None}]}),
-        _sse_line({"choices": [{"delta": {}, "finish_reason": "length"}]}),
-    ])
-    chunks = list(client.chat_completion_stream(
-        model="m1",
-        messages=[],
-    ))
+    client, _ = _make_client_with_stream_response(
+        [
+            _sse_line({"choices": [{"delta": {}, "finish_reason": None}]}),
+            _sse_line({"choices": [{"delta": {}, "finish_reason": "length"}]}),
+        ]
+    )
+    chunks = list(
+        client.chat_completion_stream(
+            model="m1",
+            messages=[],
+        )
+    )
     assert chunks == [("", None), ("", "length")]

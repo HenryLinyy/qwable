@@ -17,7 +17,9 @@ from tests.agent_mocks import (
 )
 
 
-def _task(profile: str, text: str, *, raw_request=None, tool_results=None) -> ParsedAgentTask:
+def _task(
+    profile: str, text: str, *, raw_request=None, tool_results=None
+) -> ParsedAgentTask:
     return ParsedAgentTask(
         text=text,
         tools=[],
@@ -65,7 +67,9 @@ def _critic_response(*, fatal=False):
 
 
 @pytest.mark.asyncio
-async def test_code_agent_model_runs_planner_critic_executor_and_returns_tool_call(tmp_path):
+async def test_code_agent_model_runs_planner_critic_executor_and_returns_tool_call(
+    tmp_path,
+):
     profile = resolve_profile("qwable-code-agent", "openai_responses")
     core, fake_client = _core(
         tmp_path,
@@ -84,11 +88,14 @@ async def test_code_agent_model_runs_planner_critic_executor_and_returns_tool_ca
     assert action.trace["agent_run_id"].startswith("run_")
     assert action.trace["workflow"] == "coding-workflow"
     assert action.trace["model_role"] == "executor"
-    assert [call["model"] for call in fake_client.calls] == [
-        core.config.model_role_planner,
-        core.config.model_role_critic,
-        core.config.model_qwable,  # v1.8: executor stage now routes through select_for_stage -> Qwable
-    ]
+    assert (
+        [call["model"] for call in fake_client.calls]
+        == [
+            core.config.model_role_planner,
+            core.config.model_role_critic,
+            core.config.model_qwable,  # v1.8: executor stage now routes through select_for_stage -> Qwable
+        ]
+    )
 
 
 @pytest.mark.asyncio
@@ -108,11 +115,14 @@ async def test_code_agent_executor_falls_back_to_coder_when_qwable_disabled(tmp_
 
     await core.execute(_task("coding-workflow", "Implement agent runtime v1.7"))
 
-    assert [call["model"] for call in fake_client.calls] == [
-        core.config.model_role_planner,
-        core.config.model_role_critic,
-        core.config.model_coder,  # Qwable disabled -> executor falls back to qwen3-coder-next
-    ]
+    assert (
+        [call["model"] for call in fake_client.calls]
+        == [
+            core.config.model_role_planner,
+            core.config.model_role_critic,
+            core.config.model_coder,  # Qwable disabled -> executor falls back to qwen3-coder-next
+        ]
+    )
 
 
 @pytest.mark.asyncio
@@ -140,12 +150,15 @@ async def test_tool_result_continuation_appends_evidence_and_finalizes(tmp_path)
     assert continuation.type == "final_answer"
     assert continuation.text == "Final report after search result"
     assert continuation.trace["stage"] == "finalizer"
-    assert [call["model"] for call in fake_client.calls] == [
-        core.config.model_role_planner,
-        core.config.model_role_critic,
-        core.config.model_qwable,  # v1.8: executor stage now routes through select_for_stage -> Qwable
-        core.config.model_role_judge,
-    ]
+    assert (
+        [call["model"] for call in fake_client.calls]
+        == [
+            core.config.model_role_planner,
+            core.config.model_role_critic,
+            core.config.model_qwable,  # v1.8: executor stage now routes through select_for_stage -> Qwable
+            core.config.model_role_judge,
+        ]
+    )
 
     loaded = core.agent_store.load_run(first.trace["agent_run_id"])
     assert loaded is not None
@@ -183,7 +196,9 @@ async def test_test_failure_uses_repair_model_and_returns_patch_tool_call(tmp_pa
     assert action.tool_name == "apply_patch"
     assert action.trace["stage"] == "repair"
     assert action.trace["model_role"] == "repair"
-    assert [call["model"] for call in fake_client.calls] == [core.config.model_qwable]  # v1.8: repair -> Qwable
+    assert [call["model"] for call in fake_client.calls] == [
+        core.config.model_qwable
+    ]  # v1.8: repair -> Qwable
 
     loaded = core.agent_store.load_run(run.run_id)
     assert loaded is not None

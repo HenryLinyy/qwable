@@ -4,7 +4,6 @@ import os
 
 from pydantic import Field
 from pydantic_settings import BaseSettings
-from typing import Optional
 
 
 class FusionConfig(BaseSettings):
@@ -60,8 +59,12 @@ class FusionConfig(BaseSettings):
     fusion_max_tokens_judge: int = 3600
 
     # G11 MLX formatter preference
-    prefer_mlx_formatter: bool = Field(default=True, validation_alias="QWABLE_PREFER_MLX_FORMATTER")
-    mlx_formatter_max_chars: int = Field(default=1000, validation_alias="QWABLE_MLX_FORMATTER_MAX_CHARS")
+    prefer_mlx_formatter: bool = Field(
+        default=True, validation_alias="QWABLE_PREFER_MLX_FORMATTER"
+    )
+    mlx_formatter_max_chars: int = Field(
+        default=1000, validation_alias="QWABLE_MLX_FORMATTER_MAX_CHARS"
+    )
 
     # G12-3: keep last panel + judge model resident for fast follow-up requests
     # (LM Studio TTL=1h handles eventual eviction; default true)
@@ -69,7 +72,9 @@ class FusionConfig(BaseSettings):
 
     # G12-5: judge fallback chain — tried in order if primary judge fails.
     # Default: 3 ollama models of varying sizes, each cheaper than the previous.
-    fusion_judge_fallback_chain: str = "qwen/qwen3.6-35b-a3b,google/gemma-4-26b-a4b-qat,deepseek-r1-distill-qwen-32b"
+    fusion_judge_fallback_chain: str = (
+        "qwen/qwen3.6-35b-a3b,google/gemma-4-26b-a4b-qat,deepseek-r1-distill-qwen-32b"
+    )
 
     # G13-3: retry on transient failures (timeouts, connection errors).
     # Disabled by default — enable if you see flakiness from LM Studio / ds4.
@@ -103,11 +108,19 @@ class FusionConfig(BaseSettings):
     model_role_judge: str = "qwen/qwen3.6-35b-a3b"
     model_role_heavy_primary: str = "deepseek-v4-flash"
     model_role_vision: str = "qwen/qwen3-vl-30b"
-    model_role_planner_fallback_chain: str = "qwen/qwen3.6-35b-a3b,qwen/qwen3-coder-next,google/gemma-4-26b-a4b-qat"
-    model_role_executor_fallback_chain: str = "qwen/qwen3-coder-next,qwen/qwen3.6-35b-a3b"
+    model_role_planner_fallback_chain: str = (
+        "qwen/qwen3.6-35b-a3b,qwen/qwen3-coder-next,google/gemma-4-26b-a4b-qat"
+    )
+    model_role_executor_fallback_chain: str = (
+        "qwen/qwen3-coder-next,qwen/qwen3.6-35b-a3b"
+    )
     model_role_repair_fallback_chain: str = "qwen/qwen3-coder-next,qwen/qwen3.6-35b-a3b"
-    model_role_critic_fallback_chain: str = "deepseek-r1-distill-qwen-32b,qwen/qwen3.6-35b-a3b,google/gemma-4-26b-a4b-qat"
-    model_role_judge_fallback_chain: str = "qwen/qwen3.6-35b-a3b,deepseek-r1-distill-qwen-32b,google/gemma-4-26b-a4b-qat"
+    model_role_critic_fallback_chain: str = (
+        "deepseek-r1-distill-qwen-32b,qwen/qwen3.6-35b-a3b,google/gemma-4-26b-a4b-qat"
+    )
+    model_role_judge_fallback_chain: str = (
+        "qwen/qwen3.6-35b-a3b,deepseek-r1-distill-qwen-32b,google/gemma-4-26b-a4b-qat"
+    )
 
     # M5 resource estimates
     m5_unified_memory_gb: int = 128

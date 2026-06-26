@@ -38,11 +38,16 @@ def test_explicit_vision_profile_is_respected():
 
 
 def test_heavy_with_images_uses_two_stage_vision_heavy():
-    assert select_vision_profile(_task("analyze", profile="heavy-agent")) == "vision-heavy"
+    assert (
+        select_vision_profile(_task("analyze", profile="heavy-agent")) == "vision-heavy"
+    )
 
 
 def test_ui_ocr_keywords_use_vision_pro():
-    assert select_vision_profile(_task("OCR this UI screenshot and list buttons")) == "vision-pro"
+    assert (
+        select_vision_profile(_task("OCR this UI screenshot and list buttons"))
+        == "vision-pro"
+    )
 
 
 def test_many_images_use_vision_pro():

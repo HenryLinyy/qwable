@@ -30,7 +30,13 @@ async def test_heavy_agent_ds4_online(fit_config):
     core.ds4 = MagicMock()
     core.ds4.health.return_value = True
     core.ds4.chat_completion.return_value = {
-        "choices": [{"message": {"content": '{"type": "final_answer", "text": "ds4 analysis complete"}'}}]
+        "choices": [
+            {
+                "message": {
+                    "content": '{"type": "final_answer", "text": "ds4 analysis complete"}'
+                }
+            }
+        ]
     }
 
     # Use side_effect to simulate 3 sequential ollama calls (checker, critic, judge)
@@ -132,17 +138,19 @@ async def test_heavy_agent_unloads_ollama_models_before_ds4_primary(mock_config)
     #   - formatter/vision-fast/formatter-mlx == fast → deduped
     #   - hermes-pro/agentic-mlx == agentic-pro → deduped
     assert unload_models == [
-        mock_config.model_fast,        # google/gemma-4-26b-a4b-qat
-        mock_config.model_coder,       # qwen/qwen3-coder-next
-        mock_config.model_critic,      # deepseek-r1-distill-qwen-32b
+        mock_config.model_fast,  # google/gemma-4-26b-a4b-qat
+        mock_config.model_coder,  # qwen/qwen3-coder-next
+        mock_config.model_critic,  # deepseek-r1-distill-qwen-32b
         mock_config.model_vision_pro,  # qwen/qwen3-vl-30b
-        mock_config.model_agentic_pro, # qwen/qwen3.6-35b-a3b
+        mock_config.model_agentic_pro,  # qwen/qwen3.6-35b-a3b
     ]
     assert mock_config.model_vision_fast == mock_config.model_formatter
 
 
 @pytest.mark.asyncio
-async def test_heavy_agent_falls_back_to_ds4_primary_when_judge_content_empty(fit_config):
+async def test_heavy_agent_falls_back_to_ds4_primary_when_judge_content_empty(
+    fit_config,
+):
     """Heavy-agent should not return empty text when reasoning-only judge output has no content."""
     core = FusionCore(fit_config)
     core.ollama = MagicMock()
@@ -155,7 +163,11 @@ async def test_heavy_agent_falls_back_to_ds4_primary_when_judge_content_empty(fi
     ollama_responses = [
         {"choices": [{"message": {"content": "checker ok"}}]},
         {"choices": [{"message": {"content": "critic ok"}}]},
-        {"choices": [{"message": {"content": "", "reasoning": "internal reasoning only"}}]},
+        {
+            "choices": [
+                {"message": {"content": "", "reasoning": "internal reasoning only"}}
+            ]
+        },
     ]
     core.ollama.chat_completion.side_effect = ollama_responses
 
@@ -361,7 +373,15 @@ async def test_heavy_agent_ds4_bad_response_fallback(fit_config):
         {"choices": [{"message": {"content": "coder proposal"}}]},
         {"choices": [{"message": {"content": "tooler review"}}]},
         {"choices": [{"message": {"content": "critic review"}}]},
-        {"choices": [{"message": {"content": '{"type": "final_answer", "text": "bad response fallback"}'}}]},
+        {
+            "choices": [
+                {
+                    "message": {
+                        "content": '{"type": "final_answer", "text": "bad response fallback"}'
+                    }
+                }
+            ]
+        },
     ]
 
     task = ParsedAgentTask(

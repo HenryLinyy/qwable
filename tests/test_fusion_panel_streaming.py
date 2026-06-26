@@ -4,13 +4,12 @@ When panel_token_streaming=True (default), each panel model's analysis is
 streamed token-by-token via FusionStreamEvent(panel_token, {delta}).
 """
 
-import asyncio
 from unittest.mock import MagicMock
 
 import pytest
 
 from qwable.fusion_deliberation import _run_panel_serial_streaming
-from qwable.fusion_presets import FusionPreset, PRESETS
+from qwable.fusion_presets import FusionPreset
 from qwable.streaming_events import (
     FUSION_STREAM_EVENT_PANEL_DONE,
     FUSION_STREAM_EVENT_PANEL_START,
@@ -35,8 +34,14 @@ def _streaming_chat_client(chunks_by_model: dict[str, list[str]]):
 
     pc.chat_completion_stream = stream
     pc.chat_completion = lambda **kw: {
-        "choices": [{"message": {"content": "".join(chunks_by_model.get(kw.get("model"), ["ok"]))},
-                      "finish_reason": "stop"}]
+        "choices": [
+            {
+                "message": {
+                    "content": "".join(chunks_by_model.get(kw.get("model"), ["ok"]))
+                },
+                "finish_reason": "stop",
+            }
+        ]
     }
     pc.unload_models = lambda models, **kw: unload_log.append(list(models))
     return pc, unload_log
@@ -59,18 +64,30 @@ async def test_panel_tokens_yielded_per_chunk():
     )
     events = []
     async for ev in _run_panel_serial_streaming(
-        preset=preset, original_prompt="x", panel_client=client,
-        panel_max_tokens=500, temperature=0.3,
+        preset=preset,
+        original_prompt="x",
+        panel_client=client,
+        panel_max_tokens=500,
+        temperature=0.3,
     ):
         if hasattr(ev, "event"):
             events.append(ev)
 
-    panel_token_events = [e for e in events if e.event == FUSION_STREAM_EVENT_PANEL_TOKEN]
+    panel_token_events = [
+        e for e in events if e.event == FUSION_STREAM_EVENT_PANEL_TOKEN
+    ]
     # gemma: 3 chunks, qwen3.6: 3 chunks = 6 total
     assert len(panel_token_events) == 6
     # Verify deltas preserved
     deltas = [e.data["delta"] for e in panel_token_events]
-    assert deltas == ["## ", "Analysis", "\nFor 50k", "## ", "Analysis", "\nUse mergesort"]
+    assert deltas == [
+        "## ",
+        "Analysis",
+        "\nFor 50k",
+        "## ",
+        "Analysis",
+        "\nUse mergesort",
+    ]
 
 
 @pytest.mark.asyncio
@@ -90,8 +107,11 @@ async def test_panel_token_events_have_model_id_and_index():
     )
     events = []
     async for ev in _run_panel_serial_streaming(
-        preset=preset, original_prompt="x", panel_client=client,
-        panel_max_tokens=500, temperature=0.3,
+        preset=preset,
+        original_prompt="x",
+        panel_client=client,
+        panel_max_tokens=500,
+        temperature=0.3,
     ):
         if hasattr(ev, "event") and ev.event == FUSION_STREAM_EVENT_PANEL_TOKEN:
             events.append(ev)
@@ -120,8 +140,11 @@ async def test_panel_event_order_panel_start_token_done():
     )
     events = []
     async for ev in _run_panel_serial_streaming(
-        preset=preset, original_prompt="x", panel_client=client,
-        panel_max_tokens=500, temperature=0.3,
+        preset=preset,
+        original_prompt="x",
+        panel_client=client,
+        panel_max_tokens=500,
+        temperature=0.3,
     ):
         if hasattr(ev, "event"):
             events.append(ev.event)

@@ -14,10 +14,12 @@ def test_fake_chat_response_matches_ollama_shape():
 def test_fake_agent_model_client_returns_scripted_outputs_and_records_calls():
     from tests.agent_mocks import FakeAgentModelClient, fake_chat_response
 
-    client = FakeAgentModelClient([
-        fake_chat_response("first"),
-        fake_chat_response("second"),
-    ])
+    client = FakeAgentModelClient(
+        [
+            fake_chat_response("first"),
+            fake_chat_response("second"),
+        ]
+    )
     messages = [{"role": "user", "content": "hi"}]
 
     first = client.chat_completion(
@@ -75,10 +77,15 @@ def test_fake_agent_model_client_raises_when_script_is_exhausted():
 
 
 def test_phase18_planner_and_executor_fake_outputs_match_plan_contract():
-    from tests.agent_mocks import fake_executor_tool_call_response, fake_planner_response
+    from tests.agent_mocks import (
+        fake_executor_tool_call_response,
+        fake_planner_response,
+    )
 
     planner = json.loads(fake_planner_response()["choices"][0]["message"]["content"])
-    executor = json.loads(fake_executor_tool_call_response()["choices"][0]["message"]["content"])
+    executor = json.loads(
+        fake_executor_tool_call_response()["choices"][0]["message"]["content"]
+    )
 
     assert planner["steps"] == [
         {

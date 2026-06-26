@@ -70,8 +70,11 @@ def test_retry_passes_kwargs_to_fn():
     """All kwargs forwarded to fn on each attempt."""
     fn = MagicMock(side_effect=[TimeoutError("e"), "ok"])
     result = chat_with_retry(
-        fn, max_retries=2, base_delay=0.01,
-        model="m1", messages=[{"role": "user", "content": "hi"}],
+        fn,
+        max_retries=2,
+        base_delay=0.01,
+        model="m1",
+        messages=[{"role": "user", "content": "hi"}],
         temperature=0.3,
     )
     assert result == "ok"

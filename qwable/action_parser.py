@@ -41,10 +41,14 @@ def parse_action_from_text(
             parsed = json.loads(text[json_start : json_end + 1])
             action_type = parsed.get("type", "")
             if action_type == "tool_call":
-                tool_input, input_error = parse_tool_arguments(parsed.get("tool_input", {}))
+                tool_input, input_error = parse_tool_arguments(
+                    parsed.get("tool_input", {})
+                )
                 if input_error:
                     return _validation_failure(input_error)
-                ok, error = validate_tool_call(parsed.get("tool_name"), tool_input, tools)
+                ok, error = validate_tool_call(
+                    parsed.get("tool_name"), tool_input, tools
+                )
                 if not ok:
                     return _validation_failure(error or "tool validation failed")
                 return FusionAction(
@@ -86,11 +90,17 @@ def parse_action_from_text(
 
         # Guard every shape: malformed tool_calls (non-list, non-dict element,
         # or non-dict function) must fall through to final_answer, not crash.
-        if isinstance(tool_calls, list) and tool_calls and isinstance(tool_calls[0], dict):
+        if (
+            isinstance(tool_calls, list)
+            and tool_calls
+            and isinstance(tool_calls[0], dict)
+        ):
             tc0 = tool_calls[0]
             func = tc0.get("function", {})
             if isinstance(func, dict):
-                tool_input, input_error = parse_tool_arguments(func.get("arguments", {}))
+                tool_input, input_error = parse_tool_arguments(
+                    func.get("arguments", {})
+                )
                 if input_error:
                     return _validation_failure(input_error)
                 ok, error = validate_tool_call(func.get("name"), tool_input, tools)

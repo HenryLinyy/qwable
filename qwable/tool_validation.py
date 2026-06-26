@@ -136,10 +136,14 @@ def _validate_schema_minimal(payload: dict, schema: dict) -> tuple[bool, str | N
                     item_schema = prop_schema.get("items")
                     if isinstance(item_schema, dict):
                         for idx, item in enumerate(value):
-                            ok, error = _validate_type(item, item_schema.get("type"), f"{key}[{idx}]")
+                            ok, error = _validate_type(
+                                item, item_schema.get("type"), f"{key}[{idx}]"
+                            )
                             if not ok:
                                 return False, error
-                            ok, error = _validate_enum_const(item, item_schema, f"{key}[{idx}]")
+                            ok, error = _validate_enum_const(
+                                item, item_schema, f"{key}[{idx}]"
+                            )
                             if not ok:
                                 return False, error
 
@@ -151,7 +155,9 @@ def _validate_schema_minimal(payload: dict, schema: dict) -> tuple[bool, str | N
     return True, None
 
 
-def _validate_enum_const(value: Any, prop_schema: dict, key: str) -> tuple[bool, str | None]:
+def _validate_enum_const(
+    value: Any, prop_schema: dict, key: str
+) -> tuple[bool, str | None]:
     if "const" in prop_schema and value != prop_schema["const"]:
         return False, f"'{key}' must equal {prop_schema['const']!r}"
     allowed = prop_schema.get("enum")

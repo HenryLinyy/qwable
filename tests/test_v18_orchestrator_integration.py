@@ -5,12 +5,9 @@ boundary. They do NOT change the existing v1.7 flow (executor / repair
 via WORKFLOW_STAGE_ROLE_MAP); they only add the v1.8 stage path.
 """
 
-import pytest
-
 from qwable.config import FusionConfig
 from qwable.model_roles import ModelRole, WorkflowStage
-from qwable.model_selector import ModelSelector, SelectedModel
-from tests import test_agent_orchestrator as t
+from qwable.model_selector import ModelSelector
 
 
 # ── v1.8 stage selection at the orchestrator boundary ───────────────────
@@ -50,6 +47,7 @@ async def test_v18_code_agent_trace_records_qwable_executor(tmp_path):
     executor primary (backward compat).
     """
     from qwable.config import FusionConfig
+
     cfg = FusionConfig(
         enable_qwable_executor=True,
         agent_store_path=str(tmp_path / "test.sqlite3"),
@@ -69,6 +67,7 @@ async def test_v18_code_agent_trace_records_qwable_executor(tmp_path):
 
 async def test_v18_repair_stage_selects_qwable(tmp_path):
     from qwable.config import FusionConfig
+
     cfg = FusionConfig(
         enable_qwable_executor=True,
         agent_store_path=str(tmp_path / "test.sqlite3"),
@@ -81,6 +80,7 @@ async def test_v18_repair_stage_selects_qwable(tmp_path):
 
 async def test_v18_long_context_compaction_picks_qwythos_when_enabled(tmp_path):
     from qwable.config import FusionConfig
+
     cfg = FusionConfig(
         enable_qwythos_long_context=True,
         agent_store_path=str(tmp_path / "test.sqlite3"),
@@ -95,8 +95,14 @@ async def test_long_context_worker_selection_reflects_qwythos_flag(tmp_path):
     cfg = FusionConfig(agent_store_path=str(tmp_path / "test.sqlite3"))
     sel = ModelSelector(cfg)
     # Disabled by default.
-    assert sel.select_for_stage(WorkflowStage.CONTEXT_COMPACTION).model_name != cfg.model_qwythos
+    assert (
+        sel.select_for_stage(WorkflowStage.CONTEXT_COMPACTION).model_name
+        != cfg.model_qwythos
+    )
     # Enable → Qwythos primary.
     cfg.enable_qwythos_long_context = True
     sel2 = ModelSelector(cfg)
-    assert sel2.select_for_stage(WorkflowStage.CONTEXT_COMPACTION).model_name == cfg.model_qwythos
+    assert (
+        sel2.select_for_stage(WorkflowStage.CONTEXT_COMPACTION).model_name
+        == cfg.model_qwythos
+    )

@@ -1,7 +1,5 @@
 """v1.8 prompt helpers + strip_think tests — per plan §12 / §13.3."""
 
-import pytest
-
 from qwable.config import FusionConfig
 from qwable.model_capabilities import build_qwable_spec, build_qwythos_spec
 from qwable.v18_prompts import (
@@ -47,7 +45,10 @@ def test_system_prompt_for_stage_routing():
     cfg = FusionConfig()
     assert system_prompt_for_stage("execute_patch", cfg) == QWABLE_EXECUTOR_SYSTEM
     assert system_prompt_for_stage("repair_patch", cfg) == QWABLE_REPAIR_SYSTEM
-    assert system_prompt_for_stage("context_compaction", cfg) == QWYTHOS_CONTEXT_WORKER_SYSTEM
+    assert (
+        system_prompt_for_stage("context_compaction", cfg)
+        == QWYTHOS_CONTEXT_WORKER_SYSTEM
+    )
 
 
 def test_system_prompt_for_stage_returns_none_for_v17_stages():
@@ -69,7 +70,12 @@ def test_spec_for_stage_returns_qwable_for_executor_and_repair():
 
 def test_spec_for_stage_returns_qwythos_for_long_context_stages():
     cfg = FusionConfig()
-    for stage in ("context_acquisition", "repo_index", "context_compaction", "failure_analysis"):
+    for stage in (
+        "context_acquisition",
+        "repo_index",
+        "context_compaction",
+        "failure_analysis",
+    ):
         spec = spec_for_stage(stage, cfg)
         assert spec is not None and spec.name == cfg.model_qwythos
 

@@ -1,11 +1,10 @@
 """Tests for fusion core with mocked clients."""
 
 import pytest
-import asyncio
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from qwable.fusion_core import FusionCore
 from qwable.config import FusionConfig
-from qwable.schemas import ParsedAgentTask, ToolSpec, FusionAction, ToolResult
+from qwable.schemas import ParsedAgentTask, ToolSpec, ToolResult
 
 
 @pytest.fixture
@@ -63,7 +62,15 @@ async def test_fast_agent_with_tools(mock_config, mock_ollama, mock_ds4):
 
     task = ParsedAgentTask(
         text="Read file",
-        tools=[ToolSpec(name="read_file", description="Read", input_schema={}, source_protocol="openai_responses", raw={})],
+        tools=[
+            ToolSpec(
+                name="read_file",
+                description="Read",
+                input_schema={},
+                source_protocol="openai_responses",
+                raw={},
+            )
+        ],
         tool_results=[],
         profile="fast-agent",
         source_protocol="openai_responses",
@@ -75,7 +82,9 @@ async def test_fast_agent_with_tools(mock_config, mock_ollama, mock_ds4):
 
 
 @pytest.mark.asyncio
-async def test_fast_agent_respects_request_options_and_tool_choice_none(mock_config, mock_ollama, mock_ds4):
+async def test_fast_agent_respects_request_options_and_tool_choice_none(
+    mock_config, mock_ollama, mock_ds4
+):
     """Fast-agent should honor request max_tokens, temperature, and tool_choice=none."""
     core = FusionCore(mock_config)
     core.ollama = mock_ollama
@@ -83,7 +92,15 @@ async def test_fast_agent_respects_request_options_and_tool_choice_none(mock_con
 
     task = ParsedAgentTask(
         text="Read file",
-        tools=[ToolSpec(name="read_file", description="Read", input_schema={}, source_protocol="openai_responses", raw={})],
+        tools=[
+            ToolSpec(
+                name="read_file",
+                description="Read",
+                input_schema={},
+                source_protocol="openai_responses",
+                raw={},
+            )
+        ],
         tool_results=[],
         profile="fast-agent",
         source_protocol="openai_responses",
@@ -99,7 +116,9 @@ async def test_fast_agent_respects_request_options_and_tool_choice_none(mock_con
 
 
 @pytest.mark.asyncio
-async def test_fast_agent_rejects_context_over_limit_before_model_call(mock_config, mock_ollama, mock_ds4):
+async def test_fast_agent_rejects_context_over_limit_before_model_call(
+    mock_config, mock_ollama, mock_ds4
+):
     """Fast-agent should return an explicit context error instead of silently overfeeding the model."""
     cfg = FusionConfig(fast_max_input_chars=8)
     core = FusionCore(cfg)
@@ -123,7 +142,9 @@ async def test_fast_agent_rejects_context_over_limit_before_model_call(mock_conf
 
 
 @pytest.mark.asyncio
-async def test_fast_agent_sends_tool_results_as_authoritative_user_evidence(mock_config, mock_ollama, mock_ds4):
+async def test_fast_agent_sends_tool_results_as_authoritative_user_evidence(
+    mock_config, mock_ollama, mock_ds4
+):
     """function_call_output evidence should be prominent user evidence, not assistant prose."""
     core = FusionCore(mock_config)
     core.ollama = mock_ollama
@@ -160,7 +181,9 @@ async def test_fast_agent_sends_tool_results_as_authoritative_user_evidence(mock
 
 
 @pytest.mark.asyncio
-async def test_full_agent_with_tools_returns_coder_tool_call_without_panel(mock_config, mock_ds4):
+async def test_full_agent_with_tools_returns_coder_tool_call_without_panel(
+    mock_config, mock_ds4
+):
     """Full-agent tool loop should use one coder native-tool step before any panel."""
     core = FusionCore(mock_config)
     core.ollama = MagicMock()
@@ -188,7 +211,11 @@ async def test_full_agent_with_tools_returns_coder_tool_call_without_panel(mock_
             ToolSpec(
                 name="read_file",
                 description="Read",
-                input_schema={"type": "object", "properties": {"path": {"type": "string"}}, "required": ["path"]},
+                input_schema={
+                    "type": "object",
+                    "properties": {"path": {"type": "string"}},
+                    "required": ["path"],
+                },
                 source_protocol="openai_responses",
                 raw={},
             )

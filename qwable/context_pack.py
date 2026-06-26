@@ -26,7 +26,9 @@ class ContextPack:
     def to_prompt_text(self, max_chars: int) -> str:
         sections = [f"CONTEXT_PACK\nworkflow={self.workflow}\ngoal={self.goal}\n"]
         if self.constraints:
-            sections.append("CONSTRAINTS:\n" + "\n".join(f"- {item}" for item in self.constraints))
+            sections.append(
+                "CONSTRAINTS:\n" + "\n".join(f"- {item}" for item in self.constraints)
+            )
         if self.files:
             sections.append(
                 "FILES:\n"

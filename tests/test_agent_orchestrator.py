@@ -3,7 +3,12 @@
 import json
 
 
-def _task(text="Implement qwable/agent_orchestrator.py", *, raw_request=None, tool_results=None):
+def _task(
+    text="Implement qwable/agent_orchestrator.py",
+    *,
+    raw_request=None,
+    tool_results=None,
+):
     from qwable.schemas import ParsedAgentTask
 
     return ParsedAgentTask(
@@ -75,7 +80,9 @@ class FakeCompactor:
         from qwable.context_pack import ContextPack
 
         self.calls.append((task.text, workflow))
-        return ContextPack(goal=task.text, workflow=workflow, raw_evidence=[f"request:{task.text}"])
+        return ContextPack(
+            goal=task.text, workflow=workflow, raw_evidence=[f"request:{task.text}"]
+        )
 
 
 def _store(tmp_path):
@@ -95,7 +102,9 @@ def _orchestrator(tmp_path, responses, **config_overrides):
     compactor = FakeCompactor()
     store = _store(tmp_path)
     orchestrator = AgentOrchestrator(
-        config=FusionConfig(agent_store_path=str(tmp_path / "unused.sqlite3"), **config_overrides),
+        config=FusionConfig(
+            agent_store_path=str(tmp_path / "unused.sqlite3"), **config_overrides
+        ),
         model_client=client,
         model_selector=selector,
         store=store,
@@ -187,7 +196,11 @@ def _saved_testing_run(store):
 def _assert_standard_agent_trace(trace, *, stage, status, role):
     assert trace["agent_runtime"] is True
     assert trace["agent_run_id"].startswith("run_")
-    assert trace["workflow"] in {"agentic-workflow", "coding-workflow", "review-workflow"}
+    assert trace["workflow"] in {
+        "agentic-workflow",
+        "coding-workflow",
+        "review-workflow",
+    }
     assert trace["agent_status"] == status
     assert trace["stage"] == stage
     assert trace["model_role"] == role
@@ -201,8 +214,18 @@ def _assert_standard_agent_trace(trace, *, stage, status, role):
 def test_extract_agent_run_id_accepts_valid_metadata_only():
     from qwable.agent_orchestrator import extract_agent_run_id
 
-    assert extract_agent_run_id(_task(raw_request={"metadata": {"agent_run_id": "run_abc"}})) == "run_abc"
-    assert extract_agent_run_id(_task(raw_request={"metadata": {"agent_run_id": "bad_abc"}})) is None
+    assert (
+        extract_agent_run_id(
+            _task(raw_request={"metadata": {"agent_run_id": "run_abc"}})
+        )
+        == "run_abc"
+    )
+    assert (
+        extract_agent_run_id(
+            _task(raw_request={"metadata": {"agent_run_id": "bad_abc"}})
+        )
+        is None
+    )
     assert extract_agent_run_id(_task(raw_request={"metadata": []})) is None
     assert extract_agent_run_id(_task(raw_request={})) is None
 
@@ -213,7 +236,14 @@ async def test_run_uses_model_selector_for_planner_and_executor(tmp_path):
         [
             _planner_json(),
             _plan_critic_json(),
-            json.dumps({"tool_call": {"name": "read_file", "input": {"path": "qwable/server.py"}}}),
+            json.dumps(
+                {
+                    "tool_call": {
+                        "name": "read_file",
+                        "input": {"path": "qwable/server.py"},
+                    }
+                }
+            ),
         ],
     )
 
@@ -242,7 +272,9 @@ async def test_run_uses_model_selector_for_planner_and_executor(tmp_path):
     )
     assert action.trace["selected_model"] == "model/executor"
     assert action.trace["fallback_chain"] == ["model/executor", "fallback/executor"]
-    assert compactor.calls == [("Implement qwable/agent_orchestrator.py", "coding-workflow")]
+    assert compactor.calls == [
+        ("Implement qwable/agent_orchestrator.py", "coding-workflow")
+    ]
 
     loaded = store.load_run(action.trace["agent_run_id"])
     assert loaded is not None
@@ -254,7 +286,9 @@ async def test_run_uses_model_selector_for_planner_and_executor(tmp_path):
 
 
 async def test_invalid_planner_json_returns_failed_final_answer(tmp_path):
-    orchestrator, client, selector, store, _compactor = _orchestrator(tmp_path, ["not json"])
+    orchestrator, client, selector, store, _compactor = _orchestrator(
+        tmp_path, ["not json"]
+    )
 
     action = await orchestrator.run(_task("Plan impossible"), "agentic-workflow")
 
@@ -285,7 +319,9 @@ async def test_agentic_workflow_runs_plan_critic_before_executor(tmp_path):
         ],
     )
 
-    action = await orchestrator.run(_task("Organize notes into a plan"), "agentic-workflow")
+    action = await orchestrator.run(
+        _task("Organize notes into a plan"), "agentic-workflow"
+    )
 
     assert action.type == "final_answer"
     assert action.text == json.dumps({"step_result": {"summary": "research organized"}})
@@ -317,7 +353,9 @@ async def test_agentic_workflow_blocks_on_fatal_plan_critic(tmp_path):
         ],
     )
 
-    action = await orchestrator.run(_task("Organize unsupported claims"), "agentic-workflow")
+    action = await orchestrator.run(
+        _task("Organize unsupported claims"), "agentic-workflow"
+    )
 
     assert action.type == "final_answer"
     assert "plan_critic_blocked:fatal_blocker" in action.text
@@ -328,7 +366,10 @@ async def test_agentic_workflow_blocks_on_fatal_plan_critic(tmp_path):
         ("agentic-workflow", "planner"),
         ("agentic-workflow", "plan_critic"),
     ]
-    assert [call["model"] for call in client.calls] == ["model/planner", "model/plan_critic"]
+    assert [call["model"] for call in client.calls] == [
+        "model/planner",
+        "model/plan_critic",
+    ]
 
     loaded = store.load_run(action.trace["agent_run_id"])
     assert loaded is not None
@@ -344,7 +385,9 @@ async def test_invalid_executor_tool_call_returns_blocked_final_answer(tmp_path)
         [
             _planner_json(),
             _plan_critic_json(),
-            json.dumps({"tool_call": {"name": "shell", "input": {"command": "rm -rf /"}}}),
+            json.dumps(
+                {"tool_call": {"name": "shell", "input": {"command": "rm -rf /"}}}
+            ),
         ],
     )
 
@@ -369,24 +412,40 @@ async def test_call_with_fallback_tries_next_model_after_failure(tmp_path):
     )
     selection = orchestrator.model_selector.select("coding-workflow", "executor")
 
-    response = await orchestrator._call_with_fallback(selection, [{"role": "user", "content": "hi"}])
+    response = await orchestrator._call_with_fallback(
+        selection, [{"role": "user", "content": "hi"}]
+    )
 
     assert response == {"content": json.dumps({"ok": True})}
-    assert [call["model"] for call in client.calls] == ["model/executor", "fallback/executor"]
+    assert [call["model"] for call in client.calls] == [
+        "model/executor",
+        "fallback/executor",
+    ]
     assert orchestrator.core_last_used_model == "fallback/executor"
 
 
-async def test_tool_result_continuation_appends_evidence_and_requests_coding_tests(tmp_path):
+async def test_tool_result_continuation_appends_evidence_and_requests_coding_tests(
+    tmp_path,
+):
     orchestrator, client, selector, store, _compactor = _orchestrator(
         tmp_path,
         [
             _planner_json(),
             _plan_critic_json(),
-            json.dumps({"tool_call": {"name": "read_file", "input": {"path": "qwable/server.py"}}}),
+            json.dumps(
+                {
+                    "tool_call": {
+                        "name": "read_file",
+                        "input": {"path": "qwable/server.py"},
+                    }
+                }
+            ),
         ],
     )
     first = await orchestrator.run(
-        _task("Inspect qwable/server.py. Run tests: python -m pytest tests/test_agent_orchestrator.py"),
+        _task(
+            "Inspect qwable/server.py. Run tests: python -m pytest tests/test_agent_orchestrator.py"
+        ),
         "coding-workflow",
     )
 
@@ -401,7 +460,9 @@ async def test_tool_result_continuation_appends_evidence_and_requests_coding_tes
 
     assert continuation.type == "tool_call"
     assert continuation.tool_name == "run_tests"
-    assert continuation.tool_input == {"command": "python -m pytest tests/test_agent_orchestrator.py"}
+    assert continuation.tool_input == {
+        "command": "python -m pytest tests/test_agent_orchestrator.py"
+    }
     assert continuation.trace["stage"] == "test"
     assert continuation.trace["agent_status"] == "testing"
     assert continuation.trace["model_role"] == "executor"
@@ -438,7 +499,14 @@ async def test_coding_workflow_advances_to_next_step_after_tool_result(tmp_path)
         [
             _two_step_planner_json(),
             _plan_critic_json(),
-            json.dumps({"tool_call": {"name": "read_file", "input": {"path": "qwable/server.py"}}}),
+            json.dumps(
+                {
+                    "tool_call": {
+                        "name": "read_file",
+                        "input": {"path": "qwable/server.py"},
+                    }
+                }
+            ),
             json.dumps(
                 {
                     "tool_call": {
@@ -452,7 +520,9 @@ async def test_coding_workflow_advances_to_next_step_after_tool_result(tmp_path)
             ),
         ],
     )
-    first = await orchestrator.run(_task("Inspect and patch qwable/server.py"), "coding-workflow")
+    first = await orchestrator.run(
+        _task("Inspect and patch qwable/server.py"), "coding-workflow"
+    )
 
     second = await orchestrator.run(
         _task(
@@ -494,11 +564,27 @@ async def test_agentic_workflow_advances_tool_steps_without_requesting_tests(tmp
         [
             _two_step_planner_json(),
             _plan_critic_json(),
-            json.dumps({"tool_call": {"name": "read_file", "input": {"path": "qwable/server.py"}}}),
-            json.dumps({"tool_call": {"name": "search_files", "input": {"query": "FusionCore"}}}),
+            json.dumps(
+                {
+                    "tool_call": {
+                        "name": "read_file",
+                        "input": {"path": "qwable/server.py"},
+                    }
+                }
+            ),
+            json.dumps(
+                {
+                    "tool_call": {
+                        "name": "search_files",
+                        "input": {"query": "FusionCore"},
+                    }
+                }
+            ),
         ],
     )
-    first = await orchestrator.run(_task("Read and organize repository notes"), "agentic-workflow")
+    first = await orchestrator.run(
+        _task("Read and organize repository notes"), "agentic-workflow"
+    )
 
     second = await orchestrator.run(
         _task(
@@ -542,12 +628,21 @@ async def test_coding_workflow_blocks_when_tool_call_limit_would_be_exceeded(tmp
         [
             _planner_json(),
             _plan_critic_json(),
-            json.dumps({"tool_call": {"name": "read_file", "input": {"path": "qwable/server.py"}}}),
+            json.dumps(
+                {
+                    "tool_call": {
+                        "name": "read_file",
+                        "input": {"path": "qwable/server.py"},
+                    }
+                }
+            ),
         ],
         agent_max_tool_calls=0,
     )
 
-    action = await orchestrator.run(_task("Inspect qwable/server.py"), "coding-workflow")
+    action = await orchestrator.run(
+        _task("Inspect qwable/server.py"), "coding-workflow"
+    )
 
     assert action.type == "final_answer"
     assert "tool_call_limit_exceeded" in action.text
@@ -613,7 +708,9 @@ async def test_coding_workflow_requires_tests_after_mutating_step(tmp_path):
 
 
 async def test_successful_test_result_runs_finalizer(tmp_path):
-    orchestrator, client, selector, store, _compactor = _orchestrator(tmp_path, ["Final report: tests passed"])
+    orchestrator, client, selector, store, _compactor = _orchestrator(
+        tmp_path, ["Final report: tests passed"]
+    )
     run = _saved_testing_run(store)
 
     action = await orchestrator.run(
@@ -670,7 +767,13 @@ async def test_failed_test_result_uses_repair_loop_and_requests_repair_tool(tmp_
         _task(
             "Repair failed tests",
             raw_request={"metadata": {"agent_run_id": run.run_id}},
-            tool_results=[_tool_result("run_tests", "AssertionError in tests/test_agent_orchestrator.py", is_error=True)],
+            tool_results=[
+                _tool_result(
+                    "run_tests",
+                    "AssertionError in tests/test_agent_orchestrator.py",
+                    is_error=True,
+                )
+            ],
         ),
         "coding-workflow",
     )
@@ -708,7 +811,13 @@ async def test_unrepairable_test_failure_returns_blocked_final_answer(tmp_path):
         _task(
             "Repair failed tests",
             raw_request={"metadata": {"agent_run_id": run.run_id}},
-            tool_results=[_tool_result("run_tests", "AssertionError in tests/test_agent_orchestrator.py", is_error=True)],
+            tool_results=[
+                _tool_result(
+                    "run_tests",
+                    "AssertionError in tests/test_agent_orchestrator.py",
+                    is_error=True,
+                )
+            ],
         ),
         "coding-workflow",
     )
@@ -725,7 +834,9 @@ async def test_unrepairable_test_failure_returns_blocked_final_answer(tmp_path):
     assert loaded.current_step().status == "blocked"
 
 
-async def test_review_workflow_uses_reviewer_judge_finalizer_without_patch_loop(tmp_path):
+async def test_review_workflow_uses_reviewer_judge_finalizer_without_patch_loop(
+    tmp_path,
+):
     orchestrator, client, selector, store, _compactor = _orchestrator(
         tmp_path,
         [
@@ -761,7 +872,11 @@ async def test_review_workflow_uses_reviewer_judge_finalizer_without_patch_loop(
     assert loaded.status == "completed"
     assert loaded.tool_call_count == 0
     assert loaded.plan == []
-    assert [artifact.kind for artifact in loaded.artifacts if artifact.kind in {"review", "final_report"}] == [
+    assert [
+        artifact.kind
+        for artifact in loaded.artifacts
+        if artifact.kind in {"review", "final_report"}
+    ] == [
         "review",
         "review",
         "final_report",
@@ -805,4 +920,6 @@ async def test_review_workflow_suppresses_apply_patch_tool_call(tmp_path):
     assert loaded is not None
     assert loaded.tool_call_count == 0
     assert all(artifact.kind != "tool_call" for artifact in loaded.artifacts)
-    assert any("suppressed_tool_call" in artifact.content for artifact in loaded.artifacts)
+    assert any(
+        "suppressed_tool_call" in artifact.content for artifact in loaded.artifacts
+    )

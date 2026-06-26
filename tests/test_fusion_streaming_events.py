@@ -3,13 +3,6 @@
 import pytest
 
 from qwable.streaming_events import (
-    FUSION_STREAM_EVENT_PANEL_START,
-    FUSION_STREAM_EVENT_PANEL_DONE,
-    FUSION_STREAM_EVENT_JUDGE_START,
-    FUSION_STREAM_EVENT_JUDGE_TOKEN,
-    FUSION_STREAM_EVENT_JUDGE_DONE,
-    FUSION_STREAM_EVENT_FINAL,
-    FUSION_STREAM_EVENT_ERROR,
     FUSION_STREAM_EVENT_TYPES,
     FusionStreamEvent,
     format_fusion_sse,
@@ -21,9 +14,13 @@ def test_event_type_constants_present():
     from qwable.streaming_events import AGENT_STREAM_EVENT_TYPES
 
     expected = {
-        "panel_start", "panel_done",
-        "judge_start", "judge_token", "judge_done",
-        "final", "error",
+        "panel_start",
+        "panel_done",
+        "judge_start",
+        "judge_token",
+        "judge_done",
+        "final",
+        "error",
     }
     assert expected.issubset(set(FUSION_STREAM_EVENT_TYPES))
     assert "agent_run_created" in AGENT_STREAM_EVENT_TYPES
@@ -50,11 +47,12 @@ def test_format_fusion_sse_basic():
 def test_format_fusion_sse_json_payload():
     """data payload must be valid JSON."""
     import json
+
     ev = FusionStreamEvent(event="judge_token", data={"delta": "hello"})
     sse = format_fusion_sse(ev)
     # Extract the data: line
     data_line = [ln for ln in sse.split("\n") if ln.startswith("data: ")][0]
-    payload = json.loads(data_line[len("data: "):])
+    payload = json.loads(data_line[len("data: ") :])
     assert payload == {"delta": "hello"}
 
 
@@ -112,7 +110,7 @@ def test_format_fusion_sse_agent_event():
 
     assert sse.startswith("event: agent_tool_requested\n")
     data_line = [ln for ln in sse.split("\n") if ln.startswith("data: ")][0]
-    payload = json.loads(data_line[len("data: "):])
+    payload = json.loads(data_line[len("data: ") :])
     assert payload["run_id"] == "run_123"
     assert payload["metadata"] == {"tool_name": "read_file"}
 

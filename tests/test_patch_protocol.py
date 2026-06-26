@@ -7,7 +7,10 @@ def test_validate_tool_call_accepts_known_non_shell_tools():
     assert validate_tool_call("read_file", {"path": "qwable/server.py"}) == (True, None)
     assert validate_tool_call("search_files", {"query": "AgentRun"}) == (True, None)
     assert validate_tool_call("list_files", {"path": "qwable"}) == (True, None)
-    assert validate_tool_call("run_tests", {"command": "python -m pytest"}) == (True, None)
+    assert validate_tool_call("run_tests", {"command": "python -m pytest"}) == (
+        True,
+        None,
+    )
 
 
 def test_validate_tool_call_rejects_unknown_tool():

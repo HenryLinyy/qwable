@@ -20,11 +20,11 @@ from qwable.fusion_deliberation import (
     run_fusion_agent,
 )
 from qwable.fusion_presets import PRESETS
-from qwable.fusion_schemas import PanelResponse
 
 
-def _make_panel_client(responses_per_model: dict[str, str], call_log: list = None,
-                        unload_log: list = None) -> MagicMock:
+def _make_panel_client(
+    responses_per_model: dict[str, str], call_log: list = None, unload_log: list = None
+) -> MagicMock:
     """Mock OllamaClient.
 
     `responses_per_model`: {model_id: response_text} returns text for chat_completion.
@@ -39,7 +39,10 @@ def _make_panel_client(responses_per_model: dict[str, str], call_log: list = Non
         text = responses_per_model.get(model, f"default response from {model}")
         return {
             "choices": [
-                {"message": {"role": "assistant", "content": text}, "finish_reason": "stop"}
+                {
+                    "message": {"role": "assistant", "content": text},
+                    "finish_reason": "stop",
+                }
             ]
         }
 
@@ -52,7 +55,9 @@ def _make_panel_client(responses_per_model: dict[str, str], call_log: list = Non
     return client
 
 
-def _make_ds4_client(response_text: str = "ds4 final answer", call_log: list = None) -> MagicMock:
+def _make_ds4_client(
+    response_text: str = "ds4 final answer", call_log: list = None
+) -> MagicMock:
     client = MagicMock()
 
     def chat(model, messages, **kwargs):
@@ -60,7 +65,10 @@ def _make_ds4_client(response_text: str = "ds4 final answer", call_log: list = N
             call_log.append(("ds4", model))
         return {
             "choices": [
-                {"message": {"role": "assistant", "content": response_text}, "finish_reason": "stop"}
+                {
+                    "message": {"role": "assistant", "content": response_text},
+                    "finish_reason": "stop",
+                }
             ]
         }
 
@@ -73,10 +81,12 @@ def _make_ds4_client(response_text: str = "ds4 final answer", call_log: list = N
 
 def test_run_panel_serial_calls_each_analysis_model_once():
     preset = PRESETS["budget"]  # 2 analysis models
-    client = _make_panel_client({
-        "google/gemma-4-26b-a4b-qat": "gemma analysis",
-        "qwen/qwen3.6-35b-a3b": "qwen3.6 analysis",
-    })
+    client = _make_panel_client(
+        {
+            "google/gemma-4-26b-a4b-qat": "gemma analysis",
+            "qwen/qwen3.6-35b-a3b": "qwen3.6 analysis",
+        }
+    )
     responses = run_panel_serial(
         preset=preset,
         original_prompt="x",
@@ -121,7 +131,11 @@ def test_run_panel_serial_serializes_models():
         call_log.append(("start", model))
         time.sleep(0.01)  # simulate latency
         call_log.append(("end", model))
-        return {"choices": [{"message": {"content": f"out-{model}"}, "finish_reason": "stop"}]}
+        return {
+            "choices": [
+                {"message": {"content": f"out-{model}"}, "finish_reason": "stop"}
+            ]
+        }
 
     client = MagicMock()
     client.chat_completion = slow_chat
@@ -166,12 +180,17 @@ def test_run_panel_serial_captures_panel_error():
     def flaky_chat(model, messages, **kwargs):
         if "bad" in model:
             raise RuntimeError("model crashed")
-        return {"choices": [{"message": {"content": f"good-{model}"}, "finish_reason": "stop"}]}
+        return {
+            "choices": [
+                {"message": {"content": f"good-{model}"}, "finish_reason": "stop"}
+            ]
+        }
 
     client.chat_completion = flaky_chat
     client.unload_models = lambda models: None
 
     from qwable.fusion_presets import FusionPreset
+
     preset = FusionPreset(
         name="test",
         analysis_models=("good-model", "bad-model"),
@@ -204,6 +223,7 @@ def test_run_panel_serial_unloads_even_after_panel_error():
     client.unload_models = lambda models: unload_log.append(list(models))
 
     from qwable.fusion_presets import FusionPreset
+
     preset = FusionPreset(
         name="test",
         analysis_models=("m1", "m2"),
@@ -227,7 +247,11 @@ def test_run_panel_serial_continues_after_unload_failure():
     client = MagicMock()
     client.chat_completion = lambda model, messages, **kwargs: (
         call_log.append(model),
-        {"choices": [{"message": {"content": f"out-{model}"}, "finish_reason": "stop"}]},
+        {
+            "choices": [
+                {"message": {"content": f"out-{model}"}, "finish_reason": "stop"}
+            ]
+        },
     )[1]
 
     def failing_unload(models):
@@ -236,6 +260,7 @@ def test_run_panel_serial_continues_after_unload_failure():
     client.unload_models = failing_unload
 
     from qwable.fusion_presets import FusionPreset
+
     preset = FusionPreset(
         name="test",
         analysis_models=("m1", "m2"),
@@ -285,13 +310,15 @@ second notes
 @pytest.mark.asyncio
 async def test_run_fusion_agent_uses_ollama_judge_for_quality_preset():
     """Quality preset judge (qwen3.6) should use ollama backend."""
-    panel_client = _make_panel_client({
-        "qwen/qwen3-coder-next": "## Analysis\ncoder analysis",
-        "qwen/qwen3.6-35b-a3b": "## Analysis\nqwen3.6 analysis",
-        "deepseek-r1-distill-qwen-32b": "## Analysis\nr1 analysis",
-        # judge call:
-        "qwen/qwen3.6-35b-a3b": _structured_judge_text(),
-    })
+    panel_client = _make_panel_client(
+        {
+            "qwen/qwen3-coder-next": "## Analysis\ncoder analysis",
+            "deepseek-r1-distill-qwen-32b": "## Analysis\nr1 analysis",
+            # qwen3.6 is both a panelist and the quality-preset judge; this mock
+            # keys by model id, so it returns the judge text for both its calls.
+            "qwen/qwen3.6-35b-a3b": _structured_judge_text(),
+        }
+    )
     ds4_call_log = []
     ds4_client = _make_ds4_client(call_log=ds4_call_log)
 
@@ -306,16 +333,20 @@ async def test_run_fusion_agent_uses_ollama_judge_for_quality_preset():
     )
     assert result["trace"]["judge_backend"] == "ollama"
     assert ds4_call_log == []
-    assert "mergesort" in result["text"].lower() or "stability" in result["text"].lower()
+    assert (
+        "mergesort" in result["text"].lower() or "stability" in result["text"].lower()
+    )
 
 
 @pytest.mark.asyncio
 async def test_run_fusion_agent_uses_ds4_judge_for_heavy_preset():
     """Heavy preset judge (deepseek-v4-flash) should use ds4 backend."""
-    panel_client = _make_panel_client({
-        "qwen/qwen3-coder-next": "## Analysis\ncoder",
-        "deepseek-r1-distill-qwen-32b": "## Analysis\nr1",
-    })
+    panel_client = _make_panel_client(
+        {
+            "qwen/qwen3-coder-next": "## Analysis\ncoder",
+            "deepseek-r1-distill-qwen-32b": "## Analysis\nr1",
+        }
+    )
     ds4_client = _make_ds4_client(
         response_text=_structured_judge_text(),
     )
@@ -334,18 +365,31 @@ async def test_run_fusion_agent_uses_ds4_judge_for_heavy_preset():
 
 @pytest.mark.asyncio
 async def test_run_fusion_agent_trace_includes_all_panel_responses():
-    panel_client = _make_panel_client({
-        "google/gemma-4-26b-a4b-qat": "## Analysis\ngemma",
-        "qwen/qwen3.6-35b-a3b": "## Analysis\nqwen",
-    }, call_log=[])
+    panel_client = _make_panel_client(
+        {
+            "google/gemma-4-26b-a4b-qat": "## Analysis\ngemma",
+            "qwen/qwen3.6-35b-a3b": "## Analysis\nqwen",
+        },
+        call_log=[],
+    )
 
     # Override judge call to return structured output
-    original_chat = panel_client.chat_completion
 
     def chat_with_judge(model, messages, **kwargs):
         if "## Final Answer" not in str(messages):
-            return {"choices": [{"message": {"content": f"panel-{model}"}, "finish_reason": "stop"}]}
-        return {"choices": [{"message": {"content": _structured_judge_text()}, "finish_reason": "stop"}]}
+            return {
+                "choices": [
+                    {"message": {"content": f"panel-{model}"}, "finish_reason": "stop"}
+                ]
+            }
+        return {
+            "choices": [
+                {
+                    "message": {"content": _structured_judge_text()},
+                    "finish_reason": "stop",
+                }
+            ]
+        }
 
     panel_client.chat_completion = chat_with_judge
 
@@ -372,7 +416,14 @@ async def test_run_fusion_agent_handles_unstructured_judge_output():
 
     def chat(model, messages, **kwargs):
         # First N calls are panel, then judge returns unstructured text
-        return {"choices": [{"message": {"content": "raw unstructured judge output"}, "finish_reason": "stop"}]}
+        return {
+            "choices": [
+                {
+                    "message": {"content": "raw unstructured judge output"},
+                    "finish_reason": "stop",
+                }
+            ]
+        }
 
     panel_client.chat_completion = chat
     panel_client.unload_models = lambda models: None
@@ -401,7 +452,14 @@ async def test_run_fusion_agent_serial_panel_then_judge():
         call_log.append(model)
         # Return structured judge output on every call; runner picks the last
         # one as the judge. Panel responses are also structured (but irrelevant).
-        return {"choices": [{"message": {"content": _structured_judge_text()}, "finish_reason": "stop"}]}
+        return {
+            "choices": [
+                {
+                    "message": {"content": _structured_judge_text()},
+                    "finish_reason": "stop",
+                }
+            ]
+        }
 
     panel_client = MagicMock()
     panel_client.chat_completion = chat
@@ -439,7 +497,14 @@ async def test_run_fusion_agent_unloads_judge_after_call():
 
     panel_client = MagicMock()
     panel_client.chat_completion = lambda model, messages, **kwargs: (
-        {"choices": [{"message": {"content": _structured_judge_text()}, "finish_reason": "stop"}]}
+        {
+            "choices": [
+                {
+                    "message": {"content": _structured_judge_text()},
+                    "finish_reason": "stop",
+                }
+            ]
+        }
     )
     panel_client.unload_models = lambda models: unload_log.append(list(models))
 
@@ -470,9 +535,20 @@ async def test_run_fusion_agent_panel_with_error_still_runs_judge():
         if call_count["n"] == 1:
             raise RuntimeError("panel-1 failed")
         if model == "qwen/qwen3.6-35b-a3b":
-            return {"choices": [{"message": {"content": "panel 2 ok"}, "finish_reason": "stop"}]}
+            return {
+                "choices": [
+                    {"message": {"content": "panel 2 ok"}, "finish_reason": "stop"}
+                ]
+            }
         # judge call
-        return {"choices": [{"message": {"content": _structured_judge_text()}, "finish_reason": "stop"}]}
+        return {
+            "choices": [
+                {
+                    "message": {"content": _structured_judge_text()},
+                    "finish_reason": "stop",
+                }
+            ]
+        }
 
     panel_client.chat_completion = chat
     panel_client.unload_models = lambda models: None

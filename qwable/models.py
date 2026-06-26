@@ -1,6 +1,5 @@
 """Model client wrappers for Ollama and ds4."""
 
-from typing import AsyncGenerator, Literal
 import httpx
 import json
 import logging
@@ -89,7 +88,9 @@ class OllamaClient:
         # Retry once — by then the model is warm and emits real content. Skip the
         # retry for streaming and for legitimate tool-only responses.
         if not stream and _completion_is_empty(result):
-            logger.info("empty completion from %s — retrying once (likely cold-load)", model)
+            logger.info(
+                "empty completion from %s — retrying once (likely cold-load)", model
+            )
             result = self._post_chat(payload)
         return result
 
@@ -129,20 +130,22 @@ class OllamaClient:
             payload["tools"] = tools
         self._apply_ttl(payload)
 
-        import json
-
         with self.client.stream(
             "POST", f"{self.base_url}/chat/completions", json=payload
         ) as response:
             response.raise_for_status()
             for raw_line in response.iter_lines():
                 # iter_lines yields bytes (when decode_unicode=False) or str
-                line = raw_line.decode("utf-8") if isinstance(raw_line, bytes) else raw_line
+                line = (
+                    raw_line.decode("utf-8")
+                    if isinstance(raw_line, bytes)
+                    else raw_line
+                )
                 if not line or line.startswith(":"):
                     continue
                 if not line.startswith("data: "):
                     continue
-                data_str = line[len("data: "):]
+                data_str = line[len("data: ") :]
                 if data_str.strip() == "[DONE]":
                     return
                 try:
@@ -176,13 +179,17 @@ class OllamaClient:
                 "temperature": temperature,
             }
             self._apply_ttl(payload)
-            response = self.client.post(f"{self.base_url}/chat/completions", json=payload)
+            response = self.client.post(
+                f"{self.base_url}/chat/completions", json=payload
+            )
             response.raise_for_status()
             data = response.json()
             message = data.get("choices", [{}])[0].get("message", {})
             return {"message": message}
 
-        native_base_url = self.base_url[:-3] if self.base_url.endswith("/v1") else self.base_url
+        native_base_url = (
+            self.base_url[:-3] if self.base_url.endswith("/v1") else self.base_url
+        )
         payload = {
             "model": model,
             "messages": messages,
@@ -239,7 +246,9 @@ class OllamaClient:
                 logger.info("LM Studio unload skipped: %s", e)
             return
 
-        native_base_url = self.base_url[:-3] if self.base_url.endswith("/v1") else self.base_url
+        native_base_url = (
+            self.base_url[:-3] if self.base_url.endswith("/v1") else self.base_url
+        )
         seen = set()
         for model in models:
             if not model or model in seen:

@@ -1,14 +1,12 @@
 """G13-1: tests for LocalFusionSDK."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
 
 from qwable_sdk import (
-    FusionEvent,
     FusionPreset,
-    FusionResult,
     LocalFusionClient,
 )
 
@@ -20,7 +18,9 @@ def _mock_response(json_data: dict, status_code: int = 200) -> MagicMock:
     resp.raise_for_status = MagicMock()
     if status_code >= 400:
         resp.raise_for_status.side_effect = httpx.HTTPStatusError(
-            f"{status_code}", request=MagicMock(), response=resp,
+            f"{status_code}",
+            request=MagicMock(),
+            response=resp,
         )
     return resp
 
@@ -42,11 +42,13 @@ def test_client_custom_init():
 def test_list_presets_calls_correct_endpoint():
     """list_presets() hits GET /v1/fusion/presets."""
     client = LocalFusionClient()
-    mock_resp = _mock_response({
-        "presets": {"quality": {"panel": ["a", "b"]}},
-        "loaded_now": [],
-        "ds4_reachable": True,
-    })
+    mock_resp = _mock_response(
+        {
+            "presets": {"quality": {"panel": ["a", "b"]}},
+            "loaded_now": [],
+            "ds4_reachable": True,
+        }
+    )
     with patch("httpx.Client") as MockClient:
         MockClient.return_value.__enter__.return_value.get.return_value = mock_resp
         result = client.list_presets()
@@ -57,9 +59,13 @@ def test_list_presets_calls_correct_endpoint():
 def test_fusion_chat_non_streaming_builds_correct_body():
     """fusion_chat() sends correct payload shape."""
     client = LocalFusionClient()
-    mock_resp = _mock_response({
-        "choices": [{"message": {"content": "use mergesort"}, "finish_reason": "stop"}]
-    })
+    mock_resp = _mock_response(
+        {
+            "choices": [
+                {"message": {"content": "use mergesort"}, "finish_reason": "stop"}
+            ]
+        }
+    )
     with patch("httpx.Client") as MockClient:
         ctx = MockClient.return_value.__enter__.return_value
         ctx.post.return_value = mock_resp
@@ -81,13 +87,13 @@ def test_fusion_chat_non_streaming_builds_correct_body():
 def test_fusion_chat_with_custom_panel():
     """Custom preset requires analysis_models + judge_model."""
     client = LocalFusionClient()
-    mock_resp = _mock_response({
-        "choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}]
-    })
+    mock_resp = _mock_response(
+        {"choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}]}
+    )
     with patch("httpx.Client") as MockClient:
         ctx = MockClient.return_value.__enter__.return_value
         ctx.post.return_value = mock_resp
-        result = client.fusion_chat(
+        client.fusion_chat(
             messages=[{"role": "user", "content": "x"}],
             preset=FusionPreset.CUSTOM,
             analysis_models=["m1", "m2"],
@@ -133,10 +139,12 @@ def test_fusion_chat_stream_yields_judge_tokens():
     with patch("httpx.Client") as MockClient:
         ctx = MockClient.return_value.__enter__.return_value
         ctx.stream.return_value = mock_resp
-        events = list(client.fusion_chat_stream(
-            messages=[{"role": "user", "content": "x"}],
-            preset=FusionPreset.BUDGET,
-        ))
+        events = list(
+            client.fusion_chat_stream(
+                messages=[{"role": "user", "content": "x"}],
+                preset=FusionPreset.BUDGET,
+            )
+        )
     # 2 judge_token + 1 judge_done (DONE doesn't yield an event)
     assert len(events) == 3
     assert events[0].event == "judge_token"
@@ -164,9 +172,11 @@ def test_fusion_chat_stream_skips_sse_comments():
     with patch("httpx.Client") as MockClient:
         ctx = MockClient.return_value.__enter__.return_value
         ctx.stream.return_value = mock_resp
-        events = list(client.fusion_chat_stream(
-            messages=[{"role": "user", "content": "x"}],
-        ))
+        events = list(
+            client.fusion_chat_stream(
+                messages=[{"role": "user", "content": "x"}],
+            )
+        )
     # Should yield 2 (judge_token + judge_done), no SSE comments
     assert len(events) == 2
     assert events[0].event == "judge_token"
@@ -207,7 +217,3 @@ async def test_afusion_chat_non_streaming():
             preset=FusionPreset.QUALITY,
         )
     assert result.text == "async result"
-
-
-# Helper: import AsyncMock at module level for async test
-from unittest.mock import AsyncMock

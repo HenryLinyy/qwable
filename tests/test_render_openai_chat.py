@@ -8,7 +8,14 @@ from qwable.schemas import FusionAction
 
 def test_render_final_answer():
     """Render final_answer to chat message."""
-    action = FusionAction(type="final_answer", text="Hello", tool_name=None, tool_input=None, confidence=1.0, rationale_summary=None)
+    action = FusionAction(
+        type="final_answer",
+        text="Hello",
+        tool_name=None,
+        tool_input=None,
+        confidence=1.0,
+        rationale_summary=None,
+    )
     result = render_final_answer(action)
     assert result["role"] == "assistant"
     assert result["content"] == "Hello"
@@ -16,7 +23,14 @@ def test_render_final_answer():
 
 def test_render_tool_call():
     """Render tool_call to chat message with tool_calls."""
-    action = FusionAction(type="tool_call", text=None, tool_name="read_file", tool_input={"path": "test.txt"}, confidence=0.9, rationale_summary=None)
+    action = FusionAction(
+        type="tool_call",
+        text=None,
+        tool_name="read_file",
+        tool_input={"path": "test.txt"},
+        confidence=0.9,
+        rationale_summary=None,
+    )
     result = render_tool_call(action)
     assert result["role"] == "assistant"
     assert result["content"] is None

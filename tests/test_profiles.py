@@ -15,7 +15,9 @@ def test_resolve_openai_responses():
     assert resolve_profile("qwable-agentic-pro", "openai_responses") == "agentic-pro"
     assert resolve_profile("qwable-hermes-pro", "openai_responses") == "hermes-pro"
     assert resolve_profile("qwable-agentic-mlx", "openai_responses") == "agentic-mlx"
-    assert resolve_profile("qwable-formatter-mlx", "openai_responses") == "formatter-mlx"
+    assert (
+        resolve_profile("qwable-formatter-mlx", "openai_responses") == "formatter-mlx"
+    )
     assert resolve_profile("qwable-fusion", "openai_responses") == "fusion-agent"
 
 
@@ -25,14 +27,37 @@ def test_resolve_anthropic_messages():
     assert resolve_profile("claude-qwable-fast", "anthropic_messages") == "fast-agent"
     assert resolve_profile("claude-qwable-full", "anthropic_messages") == "full-agent"
     assert resolve_profile("claude-qwable-heavy", "anthropic_messages") == "heavy-agent"
-    assert resolve_profile("claude-qwable-vision-fast", "anthropic_messages") == "vision-fast"
-    assert resolve_profile("claude-qwable-vision-pro", "anthropic_messages") == "vision-pro"
-    assert resolve_profile("claude-qwable-vision-heavy", "anthropic_messages") == "vision-heavy"
-    assert resolve_profile("claude-qwable-agentic-pro", "anthropic_messages") == "agentic-pro"
-    assert resolve_profile("claude-qwable-hermes-pro", "anthropic_messages") == "hermes-pro"
-    assert resolve_profile("claude-qwable-agentic-mlx", "anthropic_messages") == "agentic-mlx"
-    assert resolve_profile("claude-qwable-formatter-mlx", "anthropic_messages") == "formatter-mlx"
-    assert resolve_profile("claude-qwable-fusion", "anthropic_messages") == "fusion-agent"
+    assert (
+        resolve_profile("claude-qwable-vision-fast", "anthropic_messages")
+        == "vision-fast"
+    )
+    assert (
+        resolve_profile("claude-qwable-vision-pro", "anthropic_messages")
+        == "vision-pro"
+    )
+    assert (
+        resolve_profile("claude-qwable-vision-heavy", "anthropic_messages")
+        == "vision-heavy"
+    )
+    assert (
+        resolve_profile("claude-qwable-agentic-pro", "anthropic_messages")
+        == "agentic-pro"
+    )
+    assert (
+        resolve_profile("claude-qwable-hermes-pro", "anthropic_messages")
+        == "hermes-pro"
+    )
+    assert (
+        resolve_profile("claude-qwable-agentic-mlx", "anthropic_messages")
+        == "agentic-mlx"
+    )
+    assert (
+        resolve_profile("claude-qwable-formatter-mlx", "anthropic_messages")
+        == "formatter-mlx"
+    )
+    assert (
+        resolve_profile("claude-qwable-fusion", "anthropic_messages") == "fusion-agent"
+    )
 
 
 def test_resolve_openai_chat():

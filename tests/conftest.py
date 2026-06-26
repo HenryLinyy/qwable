@@ -1,10 +1,9 @@
 """Shared test fixtures for Qwable Gateway."""
 
 import asyncio
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
 from qwable.config import FusionConfig
-from qwable.fusion_core import FusionCore
 import pytest
 
 

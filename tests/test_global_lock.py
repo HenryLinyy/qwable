@@ -3,7 +3,7 @@
 import asyncio
 import pytest
 import time
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
 
 
@@ -13,7 +13,7 @@ def slow_client():
     import qwable.server as server_mod
 
     config = __import__("qwable.config", fromlist=["FusionConfig"]).FusionConfig()
-    fusion_core = __import__("qwable.fusion_core", fromlist=["FusionCore"]).FusionCore(config)
+    __import__("qwable.fusion_core", fromlist=["FusionCore"]).FusionCore(config)
     lock = asyncio.Lock()
 
     mock = MagicMock()
@@ -28,6 +28,7 @@ def slow_client():
             confidence=1.0,
             rationale_summary=None,
         )
+
     mock.execute = async_execute
     mock.__bool__ = lambda self: True
 
@@ -48,18 +49,28 @@ async def test_global_lock_busy(slow_client):
     transport = httpx.ASGITransport(app=server_mod.app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
         async with asyncio.TaskGroup() as tg:
-            t1 = tg.create_task(client.post("/v1/chat/completions", json={
-                "model": "qwable-chat",
-                "messages": [{"role": "user", "content": "Hello"}],
-                "stream": False,
-            }))
+            t1 = tg.create_task(
+                client.post(
+                    "/v1/chat/completions",
+                    json={
+                        "model": "qwable-chat",
+                        "messages": [{"role": "user", "content": "Hello"}],
+                        "stream": False,
+                    },
+                )
+            )
             # Small delay to ensure request 1 starts first
             await asyncio.sleep(0.05)
-            t2 = tg.create_task(client.post("/v1/chat/completions", json={
-                "model": "qwable-chat",
-                "messages": [{"role": "user", "content": "Hello again"}],
-                "stream": False,
-            }))
+            t2 = tg.create_task(
+                client.post(
+                    "/v1/chat/completions",
+                    json={
+                        "model": "qwable-chat",
+                        "messages": [{"role": "user", "content": "Hello again"}],
+                        "stream": False,
+                    },
+                )
+            )
 
         r1 = t1.result()
         r2 = t2.result()
@@ -71,19 +82,25 @@ async def test_global_lock_busy(slow_client):
 def test_global_lock_release(slow_client):
     """After first request completes, second should succeed."""
     client = slow_client
-    response1 = client.post("/v1/chat/completions", json={
-        "model": "qwable-chat",
-        "messages": [{"role": "user", "content": "Hello"}],
-        "stream": False,
-    })
+    response1 = client.post(
+        "/v1/chat/completions",
+        json={
+            "model": "qwable-chat",
+            "messages": [{"role": "user", "content": "Hello"}],
+            "stream": False,
+        },
+    )
     assert response1.status_code == 200
 
     # Wait for lock release
     time.sleep(0.5)
 
-    response2 = client.post("/v1/chat/completions", json={
-        "model": "qwable-chat",
-        "messages": [{"role": "user", "content": "Hello again"}],
-        "stream": False,
-    })
+    response2 = client.post(
+        "/v1/chat/completions",
+        json={
+            "model": "qwable-chat",
+            "messages": [{"role": "user", "content": "Hello again"}],
+            "stream": False,
+        },
+    )
     assert response2.status_code == 200

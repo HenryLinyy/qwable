@@ -35,7 +35,9 @@ async def test_coding_workflow_malformed_executor_json_does_not_500(tmp_path):
     """
     # Brace-y but invalid JSON (prose prefix + missing comma). Before the fix
     # this raised JSONDecodeError out of orchestrator.run() (-> HTTP 500).
-    malformed_executor = 'Here is the code: {"step_result": {"status": "done" "content": "x"}}'
+    malformed_executor = (
+        'Here is the code: {"step_result": {"status": "done" "content": "x"}}'
+    )
     orchestrator, _client, _selector, _store, _compactor = t._orchestrator(
         tmp_path,
         [

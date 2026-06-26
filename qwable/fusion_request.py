@@ -53,7 +53,8 @@ def extract_fusion_request(raw_body: dict) -> FusionRequest:
         raw_models = fusion_block.get("analysis_models")
         analysis_models = (
             list(raw_models)
-            if isinstance(raw_models, list) and all(isinstance(m, str) for m in raw_models)
+            if isinstance(raw_models, list)
+            and all(isinstance(m, str) for m in raw_models)
             else None
         )
         raw_preset = fusion_block.get("preset")

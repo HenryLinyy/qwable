@@ -39,5 +39,5 @@ def check_static_fit(
         required_gb=required_gb,
         limit_gb=limit_gb,
         reason=f"Required {required_gb:.1f}GB exceeds limit {limit_gb:.1f}GB "
-               f"(models={total_models:.1f}GB + KV reserve={kv_reserve:.1f}GB)",
+        f"(models={total_models:.1f}GB + KV reserve={kv_reserve:.1f}GB)",
     )

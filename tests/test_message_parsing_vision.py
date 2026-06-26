@@ -50,7 +50,10 @@ def test_openai_chat_parses_image_url_block():
                 "role": "user",
                 "content": [
                     {"type": "text", "text": "Describe the UI"},
-                    {"type": "image_url", "image_url": {"url": DATA_URL, "detail": "low"}},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": DATA_URL, "detail": "low"},
+                    },
                 ],
             }
         ],

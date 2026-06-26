@@ -8,13 +8,12 @@ Note: the existing `primary judge` is whatever `preset.judge_model` says.
 The fallback chain is appended AFTER the primary judge.
 """
 
-import asyncio
 from unittest.mock import MagicMock
 
 import pytest
 
 from qwable.fusion_deliberation import run_fusion_agent
-from qwable.fusion_presets import PRESETS, FusionPreset
+from qwable.fusion_presets import PRESETS
 
 
 def _structured_judge_text() -> str:
@@ -38,7 +37,14 @@ notes
 
 
 def _ok_response(text: str = None) -> dict:
-    return {"choices": [{"message": {"content": text or _structured_judge_text()}, "finish_reason": "stop"}]}
+    return {
+        "choices": [
+            {
+                "message": {"content": text or _structured_judge_text()},
+                "finish_reason": "stop",
+            }
+        ]
+    }
 
 
 def _make_panel_client(panel_text: str = "panel ok") -> MagicMock:
@@ -84,7 +90,7 @@ async def test_judge_fallback_uses_primary_when_ok():
     panel.chat_completion = tracking_chat
 
     # budget preset judge = qwen3.6 (in primary position)
-    result = await run_fusion_agent(
+    await run_fusion_agent(
         ollama_client=panel,
         ds4_client=_make_ds4_ok(),
         preset=PRESETS["budget"],
@@ -93,10 +99,15 @@ async def test_judge_fallback_uses_primary_when_ok():
         judge_max_tokens=1500,
         ds4_model="deepseek-v4-flash",
         keep_last_resident=True,
-        judge_fallback_chain=["google/gemma-4-26b-a4b-qat", "deepseek-r1-distill-qwen-32b"],
+        judge_fallback_chain=[
+            "google/gemma-4-26b-a4b-qat",
+            "deepseek-r1-distill-qwen-32b",
+        ],
     )
     # Judge = qwen3.6 — should be tried first and succeed
-    judge_calls = [m for m in call_log if m != "google/gemma-4-26b-a4b-qat"]  # exclude panel
+    judge_calls = [
+        m for m in call_log if m != "google/gemma-4-26b-a4b-qat"
+    ]  # exclude panel
     assert "qwen/qwen3.6-35b-a3b" in judge_calls
     # Fallbacks should NOT be called (primary succeeded)
     assert "deepseek-r1-distill-qwen-32b" not in call_log
@@ -117,9 +128,11 @@ async def test_judge_fallback_tries_next_on_failure():
 
     panel.chat_completion = chat
     panel.unload_models = lambda models, **kw: None
-    panel.chat_completion_stream = lambda **kw: iter([(_structured_judge_text(), "stop")])
+    panel.chat_completion_stream = lambda **kw: iter(
+        [(_structured_judge_text(), "stop")]
+    )
 
-    result = await run_fusion_agent(
+    await run_fusion_agent(
         ollama_client=panel,
         ds4_client=_make_ds4_ok(),
         preset=PRESETS["budget"],  # primary judge = qwen3.6
@@ -128,7 +141,10 @@ async def test_judge_fallback_tries_next_on_failure():
         judge_max_tokens=1500,
         ds4_model="deepseek-v4-flash",
         keep_last_resident=True,
-        judge_fallback_chain=["google/gemma-4-26b-a4b-qat", "deepseek-r1-distill-qwen-32b"],
+        judge_fallback_chain=[
+            "google/gemma-4-26b-a4b-qat",
+            "deepseek-r1-distill-qwen-32b",
+        ],
     )
     # Both qwen3.6 and gemma should appear in call log (primary failed → fallback)
     assert "qwen/qwen3.6-35b-a3b" in call_log
@@ -143,13 +159,15 @@ async def test_judge_fallback_chain_includes_ds4_first():
     call_log = []
 
     orig_ds4_chat = ds4.chat_completion
+
     def tracking(**kw):
         call_log.append(("ds4", kw.get("model")))
         return orig_ds4_chat(**kw)
+
     ds4.chat_completion = tracking
 
     # heavy preset judge = deepseek-v4-flash (ds4)
-    result = await run_fusion_agent(
+    await run_fusion_agent(
         ollama_client=panel,
         ds4_client=ds4,
         preset=PRESETS["heavy"],
@@ -179,9 +197,11 @@ async def test_judge_fallback_chains_through_multiple_fallbacks():
 
     panel.chat_completion = chat
     panel.unload_models = lambda models, **kw: None
-    panel.chat_completion_stream = lambda **kw: iter([(_structured_judge_text(), "stop")])
+    panel.chat_completion_stream = lambda **kw: iter(
+        [(_structured_judge_text(), "stop")]
+    )
 
-    result = await run_fusion_agent(
+    await run_fusion_agent(
         ollama_client=panel,
         ds4_client=_make_ds4_ok(),
         preset=PRESETS["budget"],
@@ -190,7 +210,10 @@ async def test_judge_fallback_chains_through_multiple_fallbacks():
         judge_max_tokens=1500,
         ds4_model="deepseek-v4-flash",
         keep_last_resident=True,
-        judge_fallback_chain=["google/gemma-4-26b-a4b-qat", "deepseek-r1-distill-qwen-32b"],
+        judge_fallback_chain=[
+            "google/gemma-4-26b-a4b-qat",
+            "deepseek-r1-distill-qwen-32b",
+        ],
     )
     # All 3 judges should appear (qwen3.6, gemma, r1)
     assert "qwen/qwen3.6-35b-a3b" in call_log

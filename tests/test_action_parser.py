@@ -41,19 +41,30 @@ def test_parse_with_think_block():
 def test_parse_native_tool_call():
     """Parse native tool call from Ollama response."""
     raw = {
-        "choices": [{
-            "message": {
-                "tool_calls": [{"function": {"name": "run_shell", "arguments": {"command": "ls"}}}],
+        "choices": [
+            {
+                "message": {
+                    "tool_calls": [
+                        {
+                            "function": {
+                                "name": "run_shell",
+                                "arguments": {"command": "ls"},
+                            }
+                        }
+                    ],
+                }
             }
-        }]
+        ]
     }
-    tools = [{
-        "type": "function",
-        "function": {
-            "name": "run_shell",
-            "parameters": {"type": "object"},
-        },
-    }]
+    tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": "run_shell",
+                "parameters": {"type": "object"},
+            },
+        }
+    ]
     action = parse_action_from_text(raw, tools=tools)
     assert action.type == "tool_call"
     assert action.tool_name == "run_shell"
@@ -62,23 +73,34 @@ def test_parse_native_tool_call():
 def test_parse_native_tool_call_json_string_arguments():
     """Parse OpenAI-compatible tool arguments strings into dicts."""
     raw = {
-        "choices": [{
-            "message": {
-                "tool_calls": [{"function": {"name": "run_shell", "arguments": '{"command":"ls"}'}}],
+        "choices": [
+            {
+                "message": {
+                    "tool_calls": [
+                        {
+                            "function": {
+                                "name": "run_shell",
+                                "arguments": '{"command":"ls"}',
+                            }
+                        }
+                    ],
+                }
             }
-        }]
+        ]
     }
-    tools = [{
-        "type": "function",
-        "function": {
-            "name": "run_shell",
-            "parameters": {
-                "type": "object",
-                "properties": {"command": {"type": "string"}},
-                "required": ["command"],
+    tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": "run_shell",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"command": {"type": "string"}},
+                    "required": ["command"],
+                },
             },
-        },
-    }]
+        }
+    ]
     action = parse_action_from_text(raw, tools=tools)
     assert action.type == "tool_call"
     assert action.tool_input == {"command": "ls"}
@@ -86,7 +108,9 @@ def test_parse_native_tool_call_json_string_arguments():
 
 def test_parse_rejects_unknown_tool():
     """Reject model-selected tools that were not provided by the client."""
-    raw = {"tool_calls": [{"function": {"name": "delete_everything", "arguments": "{}"}}]}
+    raw = {
+        "tool_calls": [{"function": {"name": "delete_everything", "arguments": "{}"}}]
+    }
     tools = [{"type": "function", "function": {"name": "run_shell", "parameters": {}}}]
     action = parse_action_from_text(raw, tools=tools)
     assert action.type == "final_answer"
@@ -97,13 +121,15 @@ def test_parse_rejects_unknown_tool():
 def test_parse_rejects_invalid_tool_input_schema():
     """Reject tool inputs that do not satisfy the declared schema."""
     raw = {"tool_calls": [{"function": {"name": "run_shell", "arguments": "{}"}}]}
-    tools = [{
-        "type": "function",
-        "function": {
-            "name": "run_shell",
-            "parameters": {"type": "object", "required": ["command"]},
-        },
-    }]
+    tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": "run_shell",
+                "parameters": {"type": "object", "required": ["command"]},
+            },
+        }
+    ]
     action = parse_action_from_text(raw, tools=tools)
     assert action.type == "final_answer"
     assert action.confidence == 0.0

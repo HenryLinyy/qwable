@@ -24,12 +24,20 @@ def test_infer_test_commands_detects_python_project():
         goal="Implement Python feature",
         workflow="coding-workflow",
         files=[
-            ContextFileSummary(path="pyproject.toml", reason="project metadata", summary="Python project"),
-            ContextFileSummary(path="tests/test_feature.py", reason="test", summary="pytest file"),
+            ContextFileSummary(
+                path="pyproject.toml",
+                reason="project metadata",
+                summary="Python project",
+            ),
+            ContextFileSummary(
+                path="tests/test_feature.py", reason="test", summary="pytest file"
+            ),
         ],
     )
 
-    assert TestCommandPlanner().infer_test_commands(pack, "coding-workflow") == ["python -m pytest"]
+    assert TestCommandPlanner().infer_test_commands(pack, "coding-workflow") == [
+        "python -m pytest"
+    ]
 
 
 def test_infer_test_commands_detects_node_project():
@@ -40,12 +48,18 @@ def test_infer_test_commands_detects_node_project():
         goal="Implement UI feature",
         workflow="coding-workflow",
         files=[
-            ContextFileSummary(path="package.json", reason="project metadata", summary="Node project"),
-            ContextFileSummary(path="src/App.test.tsx", reason="test", summary="frontend test"),
+            ContextFileSummary(
+                path="package.json", reason="project metadata", summary="Node project"
+            ),
+            ContextFileSummary(
+                path="src/App.test.tsx", reason="test", summary="frontend test"
+            ),
         ],
     )
 
-    assert TestCommandPlanner().infer_test_commands(pack, "coding-workflow") == ["npm test"]
+    assert TestCommandPlanner().infer_test_commands(pack, "coding-workflow") == [
+        "npm test"
+    ]
 
 
 def test_infer_test_commands_detects_node_package_managers():
@@ -56,21 +70,31 @@ def test_infer_test_commands_detects_node_package_managers():
         goal="Implement UI feature",
         workflow="coding-workflow",
         files=[
-            ContextFileSummary(path="package.json", reason="project metadata", summary="Node project"),
-            ContextFileSummary(path="pnpm-lock.yaml", reason="lockfile", summary="pnpm lock"),
+            ContextFileSummary(
+                path="package.json", reason="project metadata", summary="Node project"
+            ),
+            ContextFileSummary(
+                path="pnpm-lock.yaml", reason="lockfile", summary="pnpm lock"
+            ),
         ],
     )
     bun_pack = ContextPack(
         goal="Implement UI feature",
         workflow="coding-workflow",
         files=[
-            ContextFileSummary(path="package.json", reason="project metadata", summary="Node project"),
+            ContextFileSummary(
+                path="package.json", reason="project metadata", summary="Node project"
+            ),
             ContextFileSummary(path="bun.lockb", reason="lockfile", summary="bun lock"),
         ],
     )
 
-    assert TestCommandPlanner().infer_test_commands(pnpm_pack, "coding-workflow") == ["pnpm test"]
-    assert TestCommandPlanner().infer_test_commands(bun_pack, "coding-workflow") == ["bun test"]
+    assert TestCommandPlanner().infer_test_commands(pnpm_pack, "coding-workflow") == [
+        "pnpm test"
+    ]
+    assert TestCommandPlanner().infer_test_commands(bun_pack, "coding-workflow") == [
+        "bun test"
+    ]
 
 
 def test_infer_test_commands_returns_empty_when_no_signal_exists():

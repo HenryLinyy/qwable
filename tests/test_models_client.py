@@ -91,7 +91,9 @@ def test_chat_completion_retries_once_on_empty_content():
     """Cold-load: model returns empty content first, real content on retry."""
     client = OllamaClient(base_url="http://x/v1", backend="lmstudio")
     client.client.post = MagicMock(side_effect=[_msg(""), _msg("real answer")])
-    out = client.chat_completion(model="m", messages=[{"role": "user", "content": "hi"}])
+    out = client.chat_completion(
+        model="m", messages=[{"role": "user", "content": "hi"}]
+    )
     assert out["choices"][0]["message"]["content"] == "real answer"
     assert client.client.post.call_count == 2
 
@@ -99,7 +101,9 @@ def test_chat_completion_retries_once_on_empty_content():
 def test_chat_completion_no_retry_when_content_present():
     client = OllamaClient(base_url="http://x/v1", backend="lmstudio")
     client.client.post = MagicMock(side_effect=[_msg("answer")])
-    out = client.chat_completion(model="m", messages=[{"role": "user", "content": "hi"}])
+    out = client.chat_completion(
+        model="m", messages=[{"role": "user", "content": "hi"}]
+    )
     assert out["choices"][0]["message"]["content"] == "answer"
     assert client.client.post.call_count == 1
 
@@ -109,6 +113,8 @@ def test_chat_completion_no_retry_for_tool_only_response():
     client = OllamaClient(base_url="http://x/v1", backend="lmstudio")
     tc = [{"function": {"name": "x", "arguments": "{}"}}]
     client.client.post = MagicMock(side_effect=[_msg("", tool_calls=tc)])
-    out = client.chat_completion(model="m", messages=[{"role": "user", "content": "hi"}])
+    out = client.chat_completion(
+        model="m", messages=[{"role": "user", "content": "hi"}]
+    )
     assert out["choices"][0]["message"]["tool_calls"] == tc
     assert client.client.post.call_count == 1

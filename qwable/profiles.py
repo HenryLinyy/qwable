@@ -87,7 +87,10 @@ PROFILE_MAP_OPENAI_CHAT: dict[str, ProfileName] = {
 }
 
 
-def resolve_profile(model_name: str, protocol: Literal["openai_responses", "anthropic_messages", "openai_chat"]) -> ProfileName:
+def resolve_profile(
+    model_name: str,
+    protocol: Literal["openai_responses", "anthropic_messages", "openai_chat"],
+) -> ProfileName:
     """Map a model name to the corresponding agent profile."""
     if protocol == "openai_responses":
         return PROFILE_MAP_OPENAI_RESPONSES.get(model_name, "fast-agent")

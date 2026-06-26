@@ -76,11 +76,14 @@ def chat_with_retry(
             if not _is_retryable(exc) or attempt == max_retries:
                 raise
             last_exc = exc
-            delay = base_delay * (2 ** attempt)
+            delay = base_delay * (2**attempt)
             logger.warning(
                 "chat attempt %d/%d failed (%s: %s), retrying in %.1fs",
-                attempt + 1, max_retries + 1,
-                type(exc).__name__, exc, delay,
+                attempt + 1,
+                max_retries + 1,
+                type(exc).__name__,
+                exc,
+                delay,
             )
             time.sleep(delay)
     # Unreachable, but mypy-friendly

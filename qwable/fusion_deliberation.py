@@ -16,7 +16,6 @@ Design notes:
 """
 
 import asyncio
-import json
 import logging
 import time
 from typing import Any, AsyncIterator
@@ -50,7 +49,9 @@ def _extract_assistant_text(chat_response: dict) -> tuple[str, str]:
     except (KeyError, IndexError, TypeError):
         return "", "error"
     message = choice.get("message") or {}
-    return message.get("content", "") or "", choice.get("finish_reason", "stop") or "stop"
+    return message.get("content", "") or "", choice.get(
+        "finish_reason", "stop"
+    ) or "stop"
 
 
 def run_panel_serial(
@@ -181,8 +182,7 @@ async def run_fusion_agent(
     else:
         # Build ollama fallback chain (filter out the primary judge).
         chain = [
-            m for m in (judge_fallback_chain or [])
-            if m and m != preset.judge_model
+            m for m in (judge_fallback_chain or []) if m and m != preset.judge_model
         ]
         judge_candidates = [(preset.judge_model, "ollama")]
         for fb in chain:
@@ -208,13 +208,16 @@ async def run_fusion_agent(
                 # fusion_core not yet wired into server module).
                 try:
                     import qwable.server as _server_mod
+
                     retry_cfg = getattr(
                         getattr(_server_mod, "config", None),
-                        "fusion_max_retries", 0,
+                        "fusion_max_retries",
+                        0,
                     )
                     retry_delay = getattr(
                         getattr(_server_mod, "config", None),
-                        "fusion_retry_base_delay", 1.0,
+                        "fusion_retry_base_delay",
+                        1.0,
                     )
                 except Exception:
                     retry_cfg, retry_delay = 0, 1.0
@@ -241,9 +244,17 @@ async def run_fusion_agent(
                 logger.info("fusion judge %s succeeded", judge_model_id)
                 break
             else:
-                logger.warning("fusion judge %s returned empty text, trying fallback", judge_model_id)
+                logger.warning(
+                    "fusion judge %s returned empty text, trying fallback",
+                    judge_model_id,
+                )
         except Exception as exc:
-            logger.warning("fusion judge %s (%s) failed: %s — trying fallback", judge_model_id, backend, exc)
+            logger.warning(
+                "fusion judge %s (%s) failed: %s — trying fallback",
+                judge_model_id,
+                backend,
+                exc,
+            )
             continue
     else:
         # All candidates failed
@@ -334,6 +345,7 @@ async def _run_panel_serial_streaming(
         stream_chunks: list[str] = []
         try:
             if hasattr(panel_client, "chat_completion_stream"):
+
                 def _drain_stream(mid=model_id):
                     chunks = []
                     for delta, finish in panel_client.chat_completion_stream(
@@ -372,13 +384,16 @@ async def _run_panel_serial_streaming(
                         stream=False,
                         temperature=temperature,
                     )
+
                 # G13-3: wrap with retry for transient LM Studio errors.
                 # Resolve retry config defensively — _server_mod was never
                 # imported here, so the old code raised NameError (swallowed),
                 # skipping this fallback entirely for older non-streaming clients.
                 from qwable.fusion_retry import chat_with_retry
+
                 try:
                     import qwable.server as _server_mod
+
                     _cfg = getattr(_server_mod, "config", None)
                     retry_cfg = getattr(_cfg, "fusion_max_retries", 0)
                     retry_delay = getattr(_cfg, "fusion_retry_base_delay", 1.0)
@@ -387,14 +402,18 @@ async def _run_panel_serial_streaming(
                 response = await loop.run_in_executor(
                     None,
                     lambda: chat_with_retry(
-                        _chat_call, max_retries=retry_cfg, base_delay=retry_delay,
+                        _chat_call,
+                        max_retries=retry_cfg,
+                        base_delay=retry_delay,
                     ),
                 )
                 text, finish_reason = _extract_assistant_text(response)
         except Exception as exc:
             error = f"{type(exc).__name__}: {exc}"
             finish_reason = "error"
-            logger.warning("fusion streaming panel model %s failed: %s", model_id, error)
+            logger.warning(
+                "fusion streaming panel model %s failed: %s", model_id, error
+            )
         latency_ms = int((time.monotonic() - t0) * 1000)
 
         panel_resp = PanelResponse(
@@ -508,6 +527,7 @@ async def run_fusion_agent_streaming(
                 max_tokens=judge_max_tokens,
                 temperature=temperature,
             )
+
         # Drain sync iterator in executor, yielding judge_token events
         def _drain_and_collect(it):
             chunks = []
@@ -515,7 +535,9 @@ async def run_fusion_agent_streaming(
                 chunks.append((delta, finish))
             return chunks
 
-        chunks = await loop.run_in_executor(None, lambda: _drain_and_collect(stream_iter))
+        chunks = await loop.run_in_executor(
+            None, lambda: _drain_and_collect(stream_iter)
+        )
         for delta, finish in chunks:
             if delta:
                 judge_text_chunks.append(delta)
@@ -538,16 +560,25 @@ async def run_fusion_agent_streaming(
                 def _judge_retry_call():
                     if is_ds4_judge:
                         return ds4_client.chat_completion(
-                            model=ds4_model, messages=judge_messages,
-                            max_tokens=judge_max_tokens, stream=False, temperature=temperature,
+                            model=ds4_model,
+                            messages=judge_messages,
+                            max_tokens=judge_max_tokens,
+                            stream=False,
+                            temperature=temperature,
                         )
                     return ollama_client.chat_completion(
-                        model=preset.judge_model, messages=judge_messages,
-                        max_tokens=judge_max_tokens, stream=False, temperature=temperature,
+                        model=preset.judge_model,
+                        messages=judge_messages,
+                        max_tokens=judge_max_tokens,
+                        stream=False,
+                        temperature=temperature,
                     )
 
                 resp = await loop.run_in_executor(
-                    None, lambda: chat_with_retry(_judge_retry_call, max_retries=2, base_delay=1.0)
+                    None,
+                    lambda: chat_with_retry(
+                        _judge_retry_call, max_retries=2, base_delay=1.0
+                    ),
                 )
                 retry_text, _ = _extract_assistant_text(resp)
                 if retry_text and retry_text.strip():
@@ -557,10 +588,14 @@ async def run_fusion_agent_streaming(
                         data={"delta": retry_text},
                     )
                 else:
-                    judge_text_chunks.append(f"[fusion judge error: {type(exc).__name__}: {exc}]")
+                    judge_text_chunks.append(
+                        f"[fusion judge error: {type(exc).__name__}: {exc}]"
+                    )
             except Exception as exc2:
                 logger.warning("fusion streaming judge retry failed: %s", exc2)
-                judge_text_chunks.append(f"[fusion judge error: {type(exc2).__name__}: {exc2}]")
+                judge_text_chunks.append(
+                    f"[fusion judge error: {type(exc2).__name__}: {exc2}]"
+                )
         else:
             judge_text_chunks.append(
                 f"[fusion judge error after partial stream: {type(exc).__name__}: {exc}]"

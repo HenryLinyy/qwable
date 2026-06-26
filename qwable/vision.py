@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Literal
-import base64
 import re
 
 
@@ -132,7 +131,10 @@ def format_vision_evidence(evidence: VisionEvidence, index: int) -> str:
         parts.extend(["Warnings:", str(evidence.warnings)])
     if evidence.confidence is not None:
         parts.extend(["Confidence:", str(evidence.confidence)])
-    if evidence.raw_text and evidence.raw_text.strip() != (evidence.summary or "").strip():
+    if (
+        evidence.raw_text
+        and evidence.raw_text.strip() != (evidence.summary or "").strip()
+    ):
         parts.extend(["Raw Evidence:", evidence.raw_text.strip()])
     parts.append("[/VisionEvidence]")
     return "\n".join(parts)

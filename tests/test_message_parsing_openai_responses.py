@@ -30,7 +30,10 @@ def test_parse_input_with_tools():
                 "function": {
                     "name": "read_file",
                     "description": "Read a file",
-                    "parameters": {"type": "object", "properties": {"path": {"type": "string"}}},
+                    "parameters": {
+                        "type": "object",
+                        "properties": {"path": {"type": "string"}},
+                    },
                 },
             }
         ],
@@ -49,7 +52,12 @@ def test_parse_function_call_output():
         "model": "qwable-fast",
         "input": [
             {"role": "user", "content": "List directory"},
-            {"type": "function_call_output", "call_id": "call_1", "name": "run_shell", "output": "file1.txt\nfile2.txt"},
+            {
+                "type": "function_call_output",
+                "call_id": "call_1",
+                "name": "run_shell",
+                "output": "file1.txt\nfile2.txt",
+            },
         ],
         "stream": False,
     }

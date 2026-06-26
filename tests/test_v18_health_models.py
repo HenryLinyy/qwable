@@ -10,11 +10,7 @@ The full HTTP round-trip is verified by the manual verification flow
 """
 
 from qwable.config import FusionConfig
-from qwable.model_capabilities import (
-    build_qwable_spec,
-    build_qwythos_spec,
-)
-from qwable.model_roles import ModelRole, WorkflowStage
+from qwable.model_roles import WorkflowStage
 from qwable.model_selector import ModelSelector
 
 
@@ -47,11 +43,14 @@ def _build_models_health(selector: ModelSelector) -> dict:
         except RuntimeError:
             continue
         role = sel.role.value
-        out["roles"].setdefault(role, {
-            "primary": sel.model_name,
-            "fallbacks": list(sel.fallback_chain),
-            "stages": [],
-        })
+        out["roles"].setdefault(
+            role,
+            {
+                "primary": sel.model_name,
+                "fallbacks": list(sel.fallback_chain),
+                "stages": [],
+            },
+        )
         out["roles"][role]["stages"].append(stage.value)
 
     return out
@@ -119,8 +118,10 @@ def test_health_models_reports_qwythos_disabled_in_long_context():
     """Default: Qwythos is OFF — long_context_worker must NOT show Qwythos."""
     cfg = FusionConfig()  # default disable
     out = _build_models_health(ModelSelector(cfg))
-    assert cfg.model_qwythos not in out["roles"]["long_context_worker"]["fallbacks"] or \
-        out["roles"]["long_context_worker"]["primary"] != cfg.model_qwythos
+    assert (
+        cfg.model_qwythos not in out["roles"]["long_context_worker"]["fallbacks"]
+        or out["roles"]["long_context_worker"]["primary"] != cfg.model_qwythos
+    )
 
 
 def test_health_models_shows_qwythos_when_enabled():

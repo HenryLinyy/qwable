@@ -44,7 +44,9 @@ def test_context_pack_mutable_defaults_are_not_shared():
 
     one = ContextPack(goal="one", workflow="agentic-workflow")
     two = ContextPack(goal="two", workflow="review-workflow")
-    one.files.append(ContextFileSummary(path="README.md", reason="doc", summary="readme"))
+    one.files.append(
+        ContextFileSummary(path="README.md", reason="doc", summary="readme")
+    )
     one.raw_evidence.append("evidence")
     one.metadata["key"] = "value"
 

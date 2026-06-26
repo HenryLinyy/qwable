@@ -59,10 +59,14 @@ class VisionProcessor:
         self.config = config
         self.ollama = ollama
 
-    async def extract_evidence(self, task: ParsedAgentTask, profile: str) -> list[VisionEvidence]:
+    async def extract_evidence(
+        self, task: ParsedAgentTask, profile: str
+    ) -> list[VisionEvidence]:
         """Extract visual evidence for supported inline base64 image inputs."""
         model = self._model_for_profile(profile)
-        inline_images = [image.data_base64 for image in task.images if image.data_base64]
+        inline_images = [
+            image.data_base64 for image in task.images if image.data_base64
+        ]
         warnings: list[str] = []
 
         for image in task.images:
@@ -73,9 +77,13 @@ class VisionProcessor:
                         f"image omitted because {size_mb:.1f}MB exceeds VISION_MAX_IMAGE_MB={self.config.vision_max_image_mb}"
                     )
             elif image.url:
-                warnings.append("remote image URL preserved but not downloaded; inline base64 is required for local vision")
+                warnings.append(
+                    "remote image URL preserved but not downloaded; inline base64 is required for local vision"
+                )
             elif image.local_path:
-                warnings.append("local image paths are disabled by default; inline base64 is required")
+                warnings.append(
+                    "local image paths are disabled by default; inline base64 is required"
+                )
 
         size_ok_images = [
             data
@@ -106,7 +114,8 @@ class VisionProcessor:
             {"role": "system", "content": prompt},
             {
                 "role": "user",
-                "content": task.text or "Extract visual evidence from the supplied image.",
+                "content": task.text
+                or "Extract visual evidence from the supplied image.",
                 "images": inline_images,
             },
         ]
@@ -186,7 +195,9 @@ class VisionProcessor:
     def _extract_confidence(self, text: str) -> float | None:
         # Accept 0-1 floats, percentages (80%), and bare integers > 1; normalize
         # and clamp to [0, 1]. The old regex dropped anything outside 0/0.x/1/1.x.
-        match = re.search(r"Confidence\s*:?\s*([0-9]+(?:\.[0-9]+)?)\s*(%?)", text, re.IGNORECASE)
+        match = re.search(
+            r"Confidence\s*:?\s*([0-9]+(?:\.[0-9]+)?)\s*(%?)", text, re.IGNORECASE
+        )
         if not match:
             return None
         try:

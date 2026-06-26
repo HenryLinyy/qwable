@@ -11,6 +11,7 @@ from qwable.model_selector import ModelSelector
 
 # ── #1 _parse_json_object: prose-with-brace + plain JSON, and nested objects ──
 
+
 def test_parse_json_object_recovers_plan_after_brace_prose():
     # An earlier brace in the prose must not make the slice span two objects.
     out = _parse_json_object('Thinking about {} options, final: {"steps": ["s1"]}')
@@ -25,6 +26,7 @@ def test_parse_json_object_returns_outer_not_nested():
 
 # ── #5 _extract_tool_call: unrecognized tool-intent shape is surfaced ──
 
+
 def test_extract_tool_call_raises_on_unrecognized_tool_intent():
     with pytest.raises(ValueError):
         _extract_tool_call({"tool": "browser", "arguments": {"url": "x"}})
@@ -37,6 +39,7 @@ def test_extract_tool_call_none_when_no_tool_intent():
 
 # ── #7 select_for_stage: explicit temperature=0.0 must be preserved ──
 
+
 def test_select_for_stage_preserves_zero_temperature():
     sel = ModelSelector(FusionConfig())
     chosen = sel.select_for_stage(WorkflowStage.EXECUTE_PATCH, temperature=0.0)
@@ -44,6 +47,7 @@ def test_select_for_stage_preserves_zero_temperature():
 
 
 # ── #8 ConversationStore: lock + per-write temp keep both appends ──
+
 
 def test_conversation_store_append_persists_sequentially(tmp_path):
     store = ConversationStore(store_dir=tmp_path)

@@ -11,11 +11,14 @@ import qwable.server as server_mod
 def test_responses_streaming(app_final_answer):
     """POST /v1/responses with stream=True should return SSE."""
     client = app_final_answer
-    response = client.post("/v1/responses", json={
-        "model": "qwable-fast",
-        "input": "Hello",
-        "stream": True,
-    })
+    response = client.post(
+        "/v1/responses",
+        json={
+            "model": "qwable-fast",
+            "input": "Hello",
+            "stream": True,
+        },
+    )
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
     body = response.text
@@ -27,12 +30,20 @@ def test_responses_streaming(app_final_answer):
 def test_responses_streaming_tool_call(app_tool_call):
     """POST /v1/responses with stream=True and tool call."""
     client = app_tool_call
-    response = client.post("/v1/responses", json={
-        "model": "qwable-fast",
-        "input": "Read file",
-        "tools": [{"type": "function", "function": {"name": "read_file", "parameters": {}}}],
-        "stream": True,
-    })
+    response = client.post(
+        "/v1/responses",
+        json={
+            "model": "qwable-fast",
+            "input": "Read file",
+            "tools": [
+                {
+                    "type": "function",
+                    "function": {"name": "read_file", "parameters": {}},
+                }
+            ],
+            "stream": True,
+        },
+    )
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
     body = response.text
@@ -60,11 +71,14 @@ def test_responses_streaming_keepalive_while_execute_blocks_event_loop():
     server_mod.global_lock = asyncio.Lock()
 
     client = TestClient(server_mod.app)
-    response = client.post("/v1/responses", json={
-        "model": "qwable-heavy",
-        "input": "slow streaming task",
-        "stream": True,
-    })
+    response = client.post(
+        "/v1/responses",
+        json={
+            "model": "qwable-heavy",
+            "input": "slow streaming task",
+            "stream": True,
+        },
+    )
 
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
