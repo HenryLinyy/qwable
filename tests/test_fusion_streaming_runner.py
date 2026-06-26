@@ -4,14 +4,10 @@ Verifies event ordering: panel_start → panel_done × N → judge_start →
 judge_token × M → judge_done → final.
 """
 
-import asyncio
-from unittest.mock import MagicMock
-
 import pytest
 
 from qwable.fusion_deliberation import run_fusion_agent_streaming
 from qwable.fusion_presets import PRESETS
-from qwable.fusion_schemas import PanelResponse
 from qwable.streaming_events import (
     FUSION_STREAM_EVENT_FINAL,
     FUSION_STREAM_EVENT_JUDGE_DONE,
@@ -53,7 +49,10 @@ class _StubPanelClient:
         self.call_log.append(model)
         return {
             "choices": [
-                {"message": {"content": f"## Analysis\npanel from {model}"}, "finish_reason": "stop"}
+                {
+                    "message": {"content": f"## Analysis\npanel from {model}"},
+                    "finish_reason": "stop",
+                }
             ]
         }
 
@@ -67,7 +66,7 @@ class _StubPanelClient:
         # Send in 30-char chunks for testability
         chunk_size = 30
         for i in range(0, len(full), chunk_size):
-            yield (full[i:i + chunk_size], None)
+            yield (full[i : i + chunk_size], None)
         yield ("", "stop")
 
 
@@ -84,7 +83,10 @@ class _StubDS4Client:
         self.call_log.append(model)
         return {
             "choices": [
-                {"message": {"content": _structured_judge_text()}, "finish_reason": "stop"}
+                {
+                    "message": {"content": _structured_judge_text()},
+                    "finish_reason": "stop",
+                }
             ]
         }
 
@@ -116,7 +118,9 @@ async def test_streaming_event_order_for_budget_preset():
     # (G12-1: panel_token events may also appear between start and done)
     assert types[0] == FUSION_STREAM_EVENT_PANEL_START
     # First panel: start, optional panel_token*N, then done
-    done_indices = [i for i, t in enumerate(types) if t == FUSION_STREAM_EVENT_PANEL_DONE]
+    done_indices = [
+        i for i, t in enumerate(types) if t == FUSION_STREAM_EVENT_PANEL_DONE
+    ]
     assert len(done_indices) == 2
     assert types[done_indices[0]] == FUSION_STREAM_EVENT_PANEL_DONE
     assert types[done_indices[1]] == FUSION_STREAM_EVENT_PANEL_DONE
@@ -127,7 +131,9 @@ async def test_streaming_event_order_for_budget_preset():
 
     # Between judge_start and judge_done there must be at least one judge_token
     judge_done_idx = types.index(FUSION_STREAM_EVENT_JUDGE_DONE)
-    token_count = types[judge_start_idx + 1:judge_done_idx].count(FUSION_STREAM_EVENT_JUDGE_TOKEN)
+    token_count = types[judge_start_idx + 1 : judge_done_idx].count(
+        FUSION_STREAM_EVENT_JUDGE_TOKEN
+    )
     assert token_count >= 1
 
     # Final must be last

@@ -44,11 +44,14 @@ def _client_with_capture():
 def test_openai_responses_routes_optional_mlx_aliases(model, expected_profile):
     client, core = _client_with_capture()
 
-    response = client.post("/v1/responses", json={
-        "model": model,
-        "input": "hello",
-        "stream": False,
-    })
+    response = client.post(
+        "/v1/responses",
+        json={
+            "model": model,
+            "input": "hello",
+            "stream": False,
+        },
+    )
 
     assert response.status_code == 200
     assert core.tasks[-1].profile == expected_profile
@@ -65,11 +68,14 @@ def test_openai_responses_routes_optional_mlx_aliases(model, expected_profile):
 def test_openai_chat_routes_optional_mlx_aliases(model, expected_profile):
     client, core = _client_with_capture()
 
-    response = client.post("/v1/chat/completions", json={
-        "model": model,
-        "messages": [{"role": "user", "content": "hello"}],
-        "stream": False,
-    })
+    response = client.post(
+        "/v1/chat/completions",
+        json={
+            "model": model,
+            "messages": [{"role": "user", "content": "hello"}],
+            "stream": False,
+        },
+    )
 
     assert response.status_code == 200
     assert core.tasks[-1].profile == expected_profile

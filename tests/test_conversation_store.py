@@ -3,7 +3,6 @@
 import time
 from pathlib import Path
 
-import pytest
 
 from qwable.conversation_store import (
     Conversation,
@@ -70,8 +69,9 @@ def test_list_all_returns_recent_first(tmp_path: Path):
     store = ConversationStore(store_dir=tmp_path, ttl_seconds=3600)
     c1 = store.create()
     time.sleep(0.01)
-    c2 = store.append(
-        c1.id, ConversationMessage(role="user", content="x"),
+    store.append(
+        c1.id,
+        ConversationMessage(role="user", content="x"),
     )
     time.sleep(0.01)
     c3 = store.create()
@@ -88,6 +88,7 @@ def test_cleanup_expired_removes_only_expired(tmp_path: Path):
     # Backdate `expired`'s updated_at to past TTL
     expired_path = store._path(expired.id)
     import json as _json
+
     data = _json.loads(expired_path.read_text())
     data["updated_at"] -= 7200  # 2 hours ago
     expired_path.write_text(_json.dumps(data))
@@ -121,10 +122,14 @@ def test_build_history_block_empty_conv():
 def test_build_history_block_formats_messages():
     """History block lists messages with role and truncated content."""
     conv = Conversation(
-        id="x", created_at=0, updated_at=0,
+        id="x",
+        created_at=0,
+        updated_at=0,
         messages=[
             ConversationMessage(role="user", content="hi", preset="quality"),
-            ConversationMessage(role="assistant", content="hello back", preset="quality"),
+            ConversationMessage(
+                role="assistant", content="hello back", preset="quality"
+            ),
         ],
     )
     block = build_history_block(conv)
@@ -137,7 +142,9 @@ def test_build_history_block_truncates_long_content():
     """Content > 500 chars is truncated with marker."""
     long_content = "x" * 1000
     conv = Conversation(
-        id="x", created_at=0, updated_at=0,
+        id="x",
+        created_at=0,
+        updated_at=0,
         messages=[ConversationMessage(role="user", content=long_content)],
     )
     block = build_history_block(conv)
@@ -150,8 +157,12 @@ def test_build_history_block_truncates_long_content():
 def test_build_history_block_caps_at_max_messages():
     """Only the most recent N messages are included."""
     conv = Conversation(
-        id="x", created_at=0, updated_at=0,
-        messages=[ConversationMessage(role="user", content=f"msg{i}") for i in range(20)],
+        id="x",
+        created_at=0,
+        updated_at=0,
+        messages=[
+            ConversationMessage(role="user", content=f"msg{i}") for i in range(20)
+        ],
     )
     block = build_history_block(conv, max_messages=3)
     # Should include msg17, 18, 19 only

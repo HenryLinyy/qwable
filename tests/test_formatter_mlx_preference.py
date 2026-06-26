@@ -12,8 +12,6 @@ Conditions to route to formatter-mlx:
 Otherwise: standard fast-agent path.
 """
 
-from unittest.mock import MagicMock
-
 import pytest
 
 from qwable.config import FusionConfig
@@ -50,8 +48,10 @@ def _install_mock_clients(monkeypatch, response_text: str = "mlx formatter says 
         state["call_log"].append(model)
         return {
             "choices": [
-                {"message": {"role": "assistant", "content": response_text},
-                 "finish_reason": "stop"}
+                {
+                    "message": {"role": "assistant", "content": response_text},
+                    "finish_reason": "stop",
+                }
             ]
         }
 
@@ -66,17 +66,20 @@ def _install_mock_clients(monkeypatch, response_text: str = "mlx formatter says 
 
 def _make_task(text: str, tools: list | None = None) -> ParsedAgentTask:
     from qwable.schemas import ToolSpec
+
     spec_tools = []
-    for t in (tools or []):
+    for t in tools or []:
         if isinstance(t, dict):
             fn = t.get("function", {})
-            spec_tools.append(ToolSpec(
-                name=fn.get("name", ""),
-                description=fn.get("description"),
-                input_schema=fn.get("parameters", {}),
-                source_protocol="openai_chat",
-                raw=t,
-            ))
+            spec_tools.append(
+                ToolSpec(
+                    name=fn.get("name", ""),
+                    description=fn.get("description"),
+                    input_schema=fn.get("parameters", {}),
+                    source_protocol="openai_chat",
+                    raw=t,
+                )
+            )
         else:
             spec_tools.append(t)
     return ParsedAgentTask(
@@ -115,9 +118,7 @@ async def test_fast_agent_with_tools_uses_fast_agent(monkeypatch):
     _install_mock_clients(monkeypatch)
     config = _make_config(prefer_mlx_formatter=True)
     core = FusionCore(config)
-    tools = [
-        {"type": "function", "function": {"name": "read_file", "parameters": {}}}
-    ]
+    tools = [{"type": "function", "function": {"name": "read_file", "parameters": {}}}]
     task = _make_task("read the file", tools=tools)
 
     action = await core.execute(task)
@@ -148,7 +149,7 @@ async def test_fast_agent_long_text_uses_fast_agent(monkeypatch):
 @pytest.mark.asyncio
 async def test_prefer_mlx_formatter_false_uses_fast_agent(monkeypatch):
     """When prefer_mlx_formatter=False, all fast-agent → fast-agent (no shortcut)."""
-    state = _install_mock_clients(monkeypatch)
+    _install_mock_clients(monkeypatch)
     core = FusionCore(_make_config(prefer_mlx_formatter=False))
     task = _make_task("summarize this in 1 sentence")
 
@@ -161,7 +162,7 @@ async def test_prefer_mlx_formatter_false_uses_fast_agent(monkeypatch):
 @pytest.mark.asyncio
 async def test_fast_agent_exact_threshold_routes_to_fast_agent(monkeypatch):
     """Text exactly at threshold (1000 chars) → formatter-mlx (strict <)."""
-    state = _install_mock_clients(monkeypatch)
+    _install_mock_clients(monkeypatch)
     config = _make_config(
         prefer_mlx_formatter=True,
         mlx_formatter_max_chars=1000,
@@ -179,7 +180,7 @@ async def test_fast_agent_exact_threshold_routes_to_fast_agent(monkeypatch):
 @pytest.mark.asyncio
 async def test_only_fast_agent_profile_uses_shortcut(monkeypatch):
     """Only fast-agent profile is eligible for shortcut; others unchanged."""
-    state = _install_mock_clients(monkeypatch)
+    _install_mock_clients(monkeypatch)
     config = _make_config(prefer_mlx_formatter=True)
     core = FusionCore(config)
     # chat-agent profile with short text — should NOT route to formatter-mlx

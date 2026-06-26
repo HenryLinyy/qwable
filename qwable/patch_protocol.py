@@ -40,7 +40,9 @@ _TEST_COMMAND_PREFIXES = (
 )
 
 
-def validate_tool_call(tool_name: str, tool_input: dict[str, Any]) -> tuple[bool, str | None]:
+def validate_tool_call(
+    tool_name: str, tool_input: dict[str, Any]
+) -> tuple[bool, str | None]:
     """Return whether an executor tool call is allowed by the patch protocol."""
 
     if tool_name not in ALLOWED_PATCH_TOOL_NAMES:

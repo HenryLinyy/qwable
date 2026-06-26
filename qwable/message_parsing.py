@@ -8,7 +8,6 @@ from qwable.vision import (
     image_from_base64_source,
     image_from_url_value,
 )
-from typing import Literal
 
 
 def _openai_image_url_value(block: dict) -> tuple[str | None, str | None]:
@@ -67,7 +66,10 @@ def parse_openai_responses_input(
                         text_parts.append(content)
                     elif isinstance(content, list):
                         for block in content:
-                            if isinstance(block, dict) and block.get("type") in ("output_text", "text"):
+                            if isinstance(block, dict) and block.get("type") in (
+                                "output_text",
+                                "text",
+                            ):
                                 text_parts.append(block.get("text", ""))
                 elif item.get("type") == "function_call_output":
                     # Convert function_call_output to ToolResult
@@ -77,22 +79,25 @@ def parse_openai_responses_input(
                         output = "".join(
                             b.get("text", "")
                             for b in raw_output
-                            if isinstance(b, dict) and b.get("type") in ("output_text", "text")
+                            if isinstance(b, dict)
+                            and b.get("type") in ("output_text", "text")
                         )
                     elif isinstance(raw_output, str):
                         output = raw_output
                     else:
                         output = str(raw_output)
-                    tool_results.append(ToolResult(
-                        tool_call_id=call_id,
-                        name=item.get("name", ""),
-                        content=output,
-                        # Honor a client-supplied error flag (parity with the
-                        # anthropic / openai-chat parsers) instead of hardcoding.
-                        is_error=bool(item.get("is_error", False)),
-                        source_protocol="openai_responses",
-                        raw=item,
-                    ))
+                    tool_results.append(
+                        ToolResult(
+                            tool_call_id=call_id,
+                            name=item.get("name", ""),
+                            content=output,
+                            # Honor a client-supplied error flag (parity with the
+                            # anthropic / openai-chat parsers) instead of hardcoding.
+                            is_error=bool(item.get("is_error", False)),
+                            source_protocol="openai_responses",
+                            raw=item,
+                        )
+                    )
                 elif item.get("type") in ("input_text", "text"):
                     text_parts.append(item.get("text", ""))
                 elif item.get("type") in ("input_image", "image_url"):
@@ -132,7 +137,7 @@ def parse_anthropic_messages_input(
     model = body.get("model", "claude-qwable-fast")
     profile = resolve_profile(model, "anthropic_messages")
     stream = body.get("stream", False)
-    max_tokens = body.get("max_tokens", 1024)
+    body.get("max_tokens", 1024)
 
     # Build text from messages
     text_parts: list[str] = []
@@ -178,7 +183,7 @@ def parse_anthropic_messages_input(
                     elif block_type == "tool_use":
                         # Tool use from assistant — will be passed back to model
                         text_parts.append(
-                            f"[tool_use id={block.get('id','')} name={block.get('name','')}]"
+                            f"[tool_use id={block.get('id', '')} name={block.get('name', '')}]"
                         )
                     elif block_type == "tool_result":
                         # Convert tool_result to internal format
@@ -200,14 +205,16 @@ def parse_anthropic_messages_input(
                         # actually dropped — a legitimately empty result stays empty.
                         if not tr_content.strip() and had_non_text:
                             tr_content = "[unsupported non-text block omitted]"
-                        tool_results.append(ToolResult(
-                            tool_call_id=tr_id,
-                            name=tr_name,
-                            content=tr_content,
-                            is_error=tr_is_error,
-                            source_protocol="anthropic_messages",
-                            raw=block,
-                        ))
+                        tool_results.append(
+                            ToolResult(
+                                tool_call_id=tr_id,
+                                name=tr_name,
+                                content=tr_content,
+                                is_error=tr_is_error,
+                                source_protocol="anthropic_messages",
+                                raw=block,
+                            )
+                        )
                         text_parts.append(f"[tool_result {tr_id}]: {tr_content}")
 
     text = "\n".join(text_parts)
@@ -275,14 +282,16 @@ def parse_openai_chat_input(
                                     tr_content += tb.get("text", "") + "\n"
                         elif isinstance(tr_blocks, str):
                             tr_content = tr_blocks
-                        tool_results.append(ToolResult(
-                            tool_call_id=tr_id,
-                            name=block.get("name", ""),
-                            content=tr_content,
-                            is_error=block.get("is_error", False),
-                            source_protocol="openai_chat",
-                            raw=block,
-                        ))
+                        tool_results.append(
+                            ToolResult(
+                                tool_call_id=tr_id,
+                                name=block.get("name", ""),
+                                content=tr_content,
+                                is_error=block.get("is_error", False),
+                                source_protocol="openai_chat",
+                                raw=block,
+                            )
+                        )
 
     text = "\n".join(text_parts)
 

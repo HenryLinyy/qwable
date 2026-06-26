@@ -56,9 +56,7 @@ def _run():
             content="pytest failed",
         )
     ]
-    run.failures = [
-        AgentFailure(stage="executor", message="missing builder")
-    ]
+    run.failures = [AgentFailure(stage="executor", message="missing builder")]
     return run
 
 
@@ -130,7 +128,9 @@ def test_build_executor_messages_include_current_step_only():
 def test_build_repair_messages_include_failure_text():
     from qwable.agent_prompts import build_repair_messages
 
-    messages = build_repair_messages(_run(), _context_pack(), "pytest failed at test_agent_prompts")
+    messages = build_repair_messages(
+        _run(), _context_pack(), "pytest failed at test_agent_prompts"
+    )
 
     assert "Qwable Repair Agent" in messages[0]["content"]
     assert "FAILURE_TEXT" in messages[1]["content"]

@@ -50,7 +50,9 @@ async def test_agentic_workflow_dispatches_to_agent_orchestrator():
     core = FusionCore(FusionConfig())
     core.agent_orchestrator = FakeAgentOrchestrator()
 
-    action = await core.execute(_task("agentic-workflow", "Organize agent runtime notes"))
+    action = await core.execute(
+        _task("agentic-workflow", "Organize agent runtime notes")
+    )
 
     assert action.text == "workflow:agentic-workflow"
     assert core.agent_orchestrator.calls == [
@@ -143,7 +145,9 @@ async def test_existing_fast_agent_dispatch_is_unchanged():
     cfg = FusionConfig(prefer_mlx_formatter=False)
     core = FusionCore(cfg)
     core.ollama = MagicMock()
-    core.ollama.chat_completion.return_value = {"choices": [{"message": {"content": "fast answer"}}]}
+    core.ollama.chat_completion.return_value = {
+        "choices": [{"message": {"content": "fast answer"}}]
+    }
 
     action = await core.execute(_task("fast-agent", "hello"))
 

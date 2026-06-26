@@ -70,7 +70,10 @@ def test_default_path_uses_lmstudio_ids_not_ollama_tags():
         cfg.model_formatter_mlx,
     ]
     assert "qwen3-coder:30b" not in local_models
-    assert all(("/" in model or model == "deepseek-r1-distill-qwen-32b") for model in local_models)
+    assert all(
+        ("/" in model or model == "deepseek-r1-distill-qwen-32b")
+        for model in local_models
+    )
 
 
 def test_v15_memory_estimates_are_serial_not_parallel_defaults():

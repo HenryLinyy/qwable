@@ -36,7 +36,9 @@ def test_ds4_chat_completion():
     client.client = MagicMock()
     mock_response = {"choices": [{"message": {"content": "OK"}}]}
     client.client.post.return_value.json.return_value = mock_response
-    result = client.chat_completion(model="deepseek-v4-flash", messages=[{"role": "user", "content": "hi"}])
+    result = client.chat_completion(
+        model="deepseek-v4-flash", messages=[{"role": "user", "content": "hi"}]
+    )
     assert result["choices"][0]["message"]["content"] == "OK"
 
 

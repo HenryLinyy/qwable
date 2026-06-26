@@ -1,13 +1,11 @@
 """v1.8 ModelSelector tests — per plan §7.3 / §7.4 / §7.5 / §16.1 / §16.2."""
 
-import os
-
 import pytest
 
 from qwable.config import FusionConfig
 from qwable.model_capabilities import RoleCapabilityError
 from qwable.model_roles import ModelRole, WorkflowStage
-from qwable.model_selector import ModelSelector, SelectedModel
+from qwable.model_selector import ModelSelector
 
 
 def test_qwable_is_executor_primary_when_enabled():
@@ -125,13 +123,17 @@ def test_select_for_stage_uses_v17_chain_for_planner():
 
 
 def test_select_for_stage_uses_qwen3_6_for_critic():
-    selected_for_critic = ModelSelector(FusionConfig()).select_for_stage(WorkflowStage.PLAN_REVIEW)
+    selected_for_critic = ModelSelector(FusionConfig()).select_for_stage(
+        WorkflowStage.PLAN_REVIEW
+    )
     assert selected_for_critic.role == ModelRole.CRITIC
     # Per plan §3: critic primary is deepseek-r1-distill-qwen-32b (v1.7 unchanged).
 
 
 def test_select_for_stage_uses_qwen3_6_for_judge():
-    selected_for_judge = ModelSelector(FusionConfig()).select_for_stage(WorkflowStage.FINAL_REPORT)
+    selected_for_judge = ModelSelector(FusionConfig()).select_for_stage(
+        WorkflowStage.FINAL_REPORT
+    )
     assert selected_for_judge.role == ModelRole.JUDGE
     # Judge is v1.7 unchanged.
 
@@ -144,7 +146,11 @@ def test_capability_gate_blocks_qwable_for_judge_stage():
     # The fix happens at the assertion layer — the gate must reject.
     # We don't actually call select_for_stage here because the v1.7 chain
     # for judge doesn't consult spec; we just verify the gate independently.
-    from qwable.model_capabilities import build_qwable_spec, assert_model_allowed_for_role
+    from qwable.model_capabilities import (
+        build_qwable_spec,
+        assert_model_allowed_for_role,
+    )
+
     spec = build_qwable_spec(cfg)
     with pytest.raises(RoleCapabilityError):
         assert_model_allowed_for_role(spec, "judge")

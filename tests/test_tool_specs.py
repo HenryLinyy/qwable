@@ -11,7 +11,10 @@ def test_normalize_openai_tools():
             "function": {
                 "name": "read_file",
                 "description": "Read a file",
-                "parameters": {"type": "object", "properties": {"path": {"type": "string"}}},
+                "parameters": {
+                    "type": "object",
+                    "properties": {"path": {"type": "string"}},
+                },
             },
         }
     ]

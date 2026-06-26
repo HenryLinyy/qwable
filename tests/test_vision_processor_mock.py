@@ -38,7 +38,9 @@ async def test_vision_processor_uses_native_chat_with_thinking_disabled():
     cfg = FusionConfig()
     ollama = MagicMock()
     ollama.native_chat_completion.return_value = {
-        "message": {"content": "Summary: UI screenshot\nVisible Text: Save\nConfidence: 0.8"}
+        "message": {
+            "content": "Summary: UI screenshot\nVisible Text: Save\nConfidence: 0.8"
+        }
     }
     processor = VisionProcessor(cfg, ollama)
 

@@ -22,16 +22,13 @@ Usage:
 """
 
 import json
-from typing import Any, Iterator, AsyncIterator, Optional
+from typing import Any, Iterator, AsyncIterator
 
 import httpx
 
 from qwable_sdk.events import (
-    ErrorEvent,
-    FinalEvent,
     FusionEvent,
     JudgeEvent,
-    PanelEvent,
 )
 from qwable_sdk.types import FusionPreset, FusionPresetName, FusionResult
 
@@ -177,7 +174,7 @@ class LocalFusionClient:
                 for line in r.iter_lines():
                     if not line or not line.startswith("data: "):
                         continue
-                    data_str = line[len("data: "):]
+                    data_str = line[len("data: ") :]
                     if data_str.strip() == "[DONE]":
                         break
                     try:
@@ -253,7 +250,7 @@ class LocalFusionClient:
                 async for line in r.aiter_lines():
                     if not line or not line.startswith("data: "):
                         continue
-                    data_str = line[len("data: "):]
+                    data_str = line[len("data: ") :]
                     if data_str.strip() == "[DONE]":
                         break
                     try:
@@ -279,7 +276,9 @@ class LocalFusionClient:
         stream: bool,
     ) -> dict:
         """Build OpenAI Chat-compatible request body."""
-        preset_str = preset.value if isinstance(preset, FusionPresetName) else str(preset)
+        preset_str = (
+            preset.value if isinstance(preset, FusionPresetName) else str(preset)
+        )
 
         fusion_block: dict = {"preset": preset_str}
         if analysis_models is not None:

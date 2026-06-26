@@ -5,10 +5,8 @@ the request through FusionCore (mocked here, real stub in production).
 """
 
 import asyncio
-import json
 from unittest.mock import MagicMock
 
-import pytest
 from fastapi.testclient import TestClient
 
 from qwable.config import FusionConfig
@@ -50,7 +48,11 @@ def _fusion_trace(preset="quality", analysis_models=None, judge_model=None):
         "fusion": {
             "preset": preset,
             "analysis_models": analysis_models
-            or ["qwen/qwen3-coder-next", "qwen/qwen3.6-35b-a3b", "deepseek-r1-distill-qwen-32b"],
+            or [
+                "qwen/qwen3-coder-next",
+                "qwen/qwen3.6-35b-a3b",
+                "deepseek-r1-distill-qwen-32b",
+            ],
             "judge_model": judge_model or "qwen/qwen3.6-35b-a3b",
             "description": "Deep reasoning — 3 large models, qwen3.6 judge",
         },
@@ -69,12 +71,15 @@ def test_openai_chat_endpoint_accepts_qwable_fusion():
     )
     client = _make_client(mock)
 
-    response = client.post("/v1/chat/completions", json={
-        "model": "qwable-fusion",
-        "messages": [{"role": "user", "content": "Compare two sort algorithms"}],
-        "plugins": [{"id": "fusion", "preset": "quality"}],
-        "stream": False,
-    })
+    response = client.post(
+        "/v1/chat/completions",
+        json={
+            "model": "qwable-fusion",
+            "messages": [{"role": "user", "content": "Compare two sort algorithms"}],
+            "plugins": [{"id": "fusion", "preset": "quality"}],
+            "stream": False,
+        },
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["object"] == "chat.completion"
@@ -88,19 +93,24 @@ def test_openai_chat_endpoint_accepts_top_level_fusion_block():
     """Top-level `fusion` block shape should also work."""
     mock = _make_mock_fusion_core(
         text="[G10 STUB] custom panel",
-        trace=_fusion_trace(preset="custom", analysis_models=["m1", "m2"], judge_model="m-judge"),
+        trace=_fusion_trace(
+            preset="custom", analysis_models=["m1", "m2"], judge_model="m-judge"
+        ),
     )
     client = _make_client(mock)
 
-    response = client.post("/v1/chat/completions", json={
-        "model": "qwable-fusion",
-        "messages": [{"role": "user", "content": "x"}],
-        "fusion": {
-            "analysis_models": ["m1", "m2"],
-            "judge_model": "m-judge",
+    response = client.post(
+        "/v1/chat/completions",
+        json={
+            "model": "qwable-fusion",
+            "messages": [{"role": "user", "content": "x"}],
+            "fusion": {
+                "analysis_models": ["m1", "m2"],
+                "judge_model": "m-judge",
+            },
+            "stream": False,
         },
-        "stream": False,
-    })
+    )
     assert response.status_code == 200
 
 
@@ -110,16 +120,23 @@ def test_openai_chat_endpoint_returns_400_on_bad_preset():
         text="fusion-agent preset error: unknown fusion preset 'bogus'",
         confidence=0.0,
         rationale_summary="fusion_preset_error",
-        trace={"profile": "fusion-agent", "error": "fusion_preset_error", "error_detail": "unknown"},
+        trace={
+            "profile": "fusion-agent",
+            "error": "fusion_preset_error",
+            "error_detail": "unknown",
+        },
     )
     client = _make_client(mock)
 
-    response = client.post("/v1/chat/completions", json={
-        "model": "qwable-fusion",
-        "messages": [{"role": "user", "content": "x"}],
-        "fusion": {"preset": "bogus"},
-        "stream": False,
-    })
+    response = client.post(
+        "/v1/chat/completions",
+        json={
+            "model": "qwable-fusion",
+            "messages": [{"role": "user", "content": "x"}],
+            "fusion": {"preset": "bogus"},
+            "stream": False,
+        },
+    )
     assert response.status_code == 200  # body returns 200 with error in text
     data = response.json()
     assert "bogus" in data["choices"][0]["message"]["content"]
@@ -131,9 +148,15 @@ def test_openai_chat_endpoint_custom_panel_flows_through():
 
     async def capture_execute(task):
         captured["raw"] = task.raw_request
-        result = MagicMock(type="final_answer", text="ok", tool_name=None, tool_input=None,
-                           confidence=0.5, rationale_summary=None,
-                           trace=_fusion_trace(preset="custom"))
+        result = MagicMock(
+            type="final_answer",
+            text="ok",
+            tool_name=None,
+            tool_input=None,
+            confidence=0.5,
+            rationale_summary=None,
+            trace=_fusion_trace(preset="custom"),
+        )
         return result
 
     mock = MagicMock()
@@ -141,14 +164,17 @@ def test_openai_chat_endpoint_custom_panel_flows_through():
     mock.__bool__ = lambda self: True
 
     client = _make_client(mock)
-    response = client.post("/v1/chat/completions", json={
-        "model": "qwable-fusion",
-        "messages": [{"role": "user", "content": "x"}],
-        "fusion": {
-            "analysis_models": ["m1", "m2"],
-            "judge_model": "m-judge",
+    response = client.post(
+        "/v1/chat/completions",
+        json={
+            "model": "qwable-fusion",
+            "messages": [{"role": "user", "content": "x"}],
+            "fusion": {
+                "analysis_models": ["m1", "m2"],
+                "judge_model": "m-judge",
+            },
         },
-    })
+    )
     assert response.status_code == 200
     assert captured["raw"]["fusion"]["analysis_models"] == ["m1", "m2"]
     assert captured["raw"]["fusion"]["judge_model"] == "m-judge"
@@ -165,12 +191,15 @@ def test_openai_responses_endpoint_accepts_qwable_fusion():
     )
     client = _make_client(mock)
 
-    response = client.post("/v1/responses", json={
-        "model": "qwable-fusion",
-        "input": "summarize trade-offs",
-        "plugins": [{"id": "fusion", "preset": "budget"}],
-        "stream": False,
-    })
+    response = client.post(
+        "/v1/responses",
+        json={
+            "model": "qwable-fusion",
+            "input": "summarize trade-offs",
+            "plugins": [{"id": "fusion", "preset": "budget"}],
+            "stream": False,
+        },
+    )
     assert response.status_code == 200
     data = response.json()
     # OpenAI Responses returns output_text or output array; tolerate either
@@ -181,18 +210,23 @@ def test_openai_responses_endpoint_custom_panel():
     """Custom panel via fusion block works on Responses too."""
     mock = _make_mock_fusion_core(
         text="[G10 STUB] custom",
-        trace=_fusion_trace(preset="custom", analysis_models=["m1", "m2", "m3"], judge_model="m-judge"),
+        trace=_fusion_trace(
+            preset="custom", analysis_models=["m1", "m2", "m3"], judge_model="m-judge"
+        ),
     )
     client = _make_client(mock)
 
-    response = client.post("/v1/responses", json={
-        "model": "qwable-fusion",
-        "input": "x",
-        "fusion": {
-            "analysis_models": ["m1", "m2", "m3"],
-            "judge_model": "m-judge",
+    response = client.post(
+        "/v1/responses",
+        json={
+            "model": "qwable-fusion",
+            "input": "x",
+            "fusion": {
+                "analysis_models": ["m1", "m2", "m3"],
+                "judge_model": "m-judge",
+            },
         },
-    })
+    )
     assert response.status_code == 200
 
 
@@ -207,12 +241,15 @@ def test_anthropic_endpoint_accepts_claude_qwable_fusion():
     )
     client = _make_client(mock)
 
-    response = client.post("/v1/messages", json={
-        "model": "claude-qwable-fusion",
-        "messages": [{"role": "user", "content": "review this PR"}],
-        "max_tokens": 2048,
-        "fusion": {"preset": "coding"},
-    })
+    response = client.post(
+        "/v1/messages",
+        json={
+            "model": "claude-qwable-fusion",
+            "messages": [{"role": "user", "content": "review this PR"}],
+            "max_tokens": 2048,
+            "fusion": {"preset": "coding"},
+        },
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["model"] == "claude-qwable-fusion"
@@ -225,17 +262,23 @@ def test_anthropic_endpoint_heavy_preset():
     """Heavy preset uses ds4 judge — endpoint should pass it through."""
     mock = _make_mock_fusion_core(
         text="[G10 STUB] heavy preset",
-        trace=_fusion_trace(preset="heavy", judge_model="deepseek-v4-flash",
-                            analysis_models=["qwen-coder", "deepseek-r1"]),
+        trace=_fusion_trace(
+            preset="heavy",
+            judge_model="deepseek-v4-flash",
+            analysis_models=["qwen-coder", "deepseek-r1"],
+        ),
     )
     client = _make_client(mock)
 
-    response = client.post("/v1/messages", json={
-        "model": "claude-qwable-fusion",
-        "messages": [{"role": "user", "content": "long context question"}],
-        "max_tokens": 2048,
-        "fusion": {"preset": "heavy"},
-    })
+    response = client.post(
+        "/v1/messages",
+        json={
+            "model": "claude-qwable-fusion",
+            "messages": [{"role": "user", "content": "long context question"}],
+            "max_tokens": 2048,
+            "fusion": {"preset": "heavy"},
+        },
+    )
     assert response.status_code == 200
 
 
@@ -250,10 +293,13 @@ def test_openai_chat_endpoint_empty_messages_list():
     )
     client = _make_client(mock)
 
-    response = client.post("/v1/chat/completions", json={
-        "model": "qwable-fusion",
-        "messages": [],
-    })
+    response = client.post(
+        "/v1/chat/completions",
+        json={
+            "model": "qwable-fusion",
+            "messages": [],
+        },
+    )
     assert response.status_code == 200
 
 
@@ -263,21 +309,30 @@ def test_openai_chat_endpoint_plugins_priority_over_fusion_block():
 
     async def capture_execute(task):
         captured["raw"] = task.raw_request
-        return MagicMock(type="final_answer", text="ok", tool_name=None, tool_input=None,
-                         confidence=0.5, rationale_summary=None,
-                         trace=_fusion_trace(preset="quality"))
+        return MagicMock(
+            type="final_answer",
+            text="ok",
+            tool_name=None,
+            tool_input=None,
+            confidence=0.5,
+            rationale_summary=None,
+            trace=_fusion_trace(preset="quality"),
+        )
 
     mock = MagicMock()
     mock.execute = capture_execute
     mock.__bool__ = lambda self: True
 
     client = _make_client(mock)
-    response = client.post("/v1/chat/completions", json={
-        "model": "qwable-fusion",
-        "messages": [{"role": "user", "content": "x"}],
-        "plugins": [{"id": "fusion", "preset": "quality"}],
-        "fusion": {"preset": "budget"},
-    })
+    response = client.post(
+        "/v1/chat/completions",
+        json={
+            "model": "qwable-fusion",
+            "messages": [{"role": "user", "content": "x"}],
+            "plugins": [{"id": "fusion", "preset": "quality"}],
+            "fusion": {"preset": "budget"},
+        },
+    )
     assert response.status_code == 200
     # Both shapes preserved in raw body (resolution happens inside FusionCore)
     assert captured["raw"]["plugins"][0]["preset"] == "quality"

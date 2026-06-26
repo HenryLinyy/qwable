@@ -43,7 +43,7 @@ jobs:
       - name: Run pytest
         env:
           # CI runs without real LM Studio / ds4 — set test-safe defaults
-          FUSION_DEFAULT_PRESET: quality
+          FUSION_DEFAULT_PRESET: budget
           FUSION_MAX_RETRIES: 0
         run: |
           pytest tests/ -q --tb=short --maxfail=5

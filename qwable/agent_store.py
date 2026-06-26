@@ -170,7 +170,9 @@ class AgentStore:
                 "SELECT run_id FROM agent_runs ORDER BY updated_at DESC LIMIT ?",
                 (limit,),
             ).fetchall()
-        return [run for row in rows if (run := self.load_run(row["run_id"])) is not None]
+        return [
+            run for row in rows if (run := self.load_run(row["run_id"])) is not None
+        ]
 
     def append_artifact(self, run_id: str, artifact: AgentArtifact) -> None:
         with self._connect() as conn:

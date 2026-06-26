@@ -53,9 +53,8 @@ class AgentRouter:
 
     def resolve_workflow(self, task: ParsedAgentTask, default_workflow: str) -> str:
         forced = _forced_workflow(task)
-        if (
-            forced == "coding-workflow"
-            and (task.profile in WORKFLOW_PROFILES or default_workflow in WORKFLOW_PROFILES)
+        if forced == "coding-workflow" and (
+            task.profile in WORKFLOW_PROFILES or default_workflow in WORKFLOW_PROFILES
         ):
             return "coding-workflow"
 
@@ -69,13 +68,17 @@ class AgentRouter:
         text = (task.text or "").lower()
         if _contains_keyword(text, CODING_KEYWORDS):
             return "coding-workflow"
-        if _contains_keyword(text, REVIEW_KEYWORDS) and not _contains_keyword(text, PATCH_KEYWORDS):
+        if _contains_keyword(text, REVIEW_KEYWORDS) and not _contains_keyword(
+            text, PATCH_KEYWORDS
+        ):
             return "review-workflow"
         return default_workflow
 
 
 def _forced_workflow(task: ParsedAgentTask) -> str | None:
-    metadata = task.raw_request.get("metadata") if isinstance(task.raw_request, dict) else None
+    metadata = (
+        task.raw_request.get("metadata") if isinstance(task.raw_request, dict) else None
+    )
     if not isinstance(metadata, dict):
         return None
     value = metadata.get("force_workflow")

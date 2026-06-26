@@ -30,7 +30,10 @@ SETTINGS_PATH = Path.home() / ".lmstudio" / "settings.json"
 def _lms_cli() -> str:
     """Resolve the LM Studio CLI path: env override, else the standard location
     under the current user's home (portable across machines)."""
-    return os.environ.get("LMSTUDIO_CLI_PATH") or str(Path.home() / ".lmstudio" / "bin" / "lms")
+    return os.environ.get("LMSTUDIO_CLI_PATH") or str(
+        Path.home() / ".lmstudio" / "bin" / "lms"
+    )
+
 
 # Recommended defaults for M5 Max 128GB running fusion deliberation
 RECOMMENDED_CONTEXT_LENGTH = 32768  # 32K — supports long fusion prompts + history
@@ -42,9 +45,8 @@ def backup_settings() -> Path | None:
     if not SETTINGS_PATH.exists():
         return None
     import time
-    backup = SETTINGS_PATH.with_suffix(
-        f".json.bak.{int(time.time())}"
-    )
+
+    backup = SETTINGS_PATH.with_suffix(f".json.bak.{int(time.time())}")
     shutil.copy2(SETTINGS_PATH, backup)
     logger.info("backed up settings.json to %s", backup)
     return backup
@@ -118,7 +120,9 @@ def get_current_optimizations() -> dict:
     try:
         out = subprocess.run(
             [_lms_cli(), "--version"],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         info["lmstudio_version"] = out.stdout.strip()
     except Exception as exc:
@@ -128,17 +132,21 @@ def get_current_optimizations() -> dict:
     try:
         out = subprocess.run(
             [_lms_cli(), "ps"],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         for line in out.stdout.splitlines():
             parts = line.split()
             if len(parts) >= 4 and "/" in parts[0]:
-                info["current_loaded_models"].append({
-                    "identifier": parts[0],
-                    "model": parts[1] if len(parts) > 1 else "?",
-                    "status": parts[2] if len(parts) > 2 else "?",
-                    "size_gb": parts[3] if len(parts) > 3 else "?",
-                })
+                info["current_loaded_models"].append(
+                    {
+                        "identifier": parts[0],
+                        "model": parts[1] if len(parts) > 1 else "?",
+                        "status": parts[2] if len(parts) > 2 else "?",
+                        "size_gb": parts[3] if len(parts) > 3 else "?",
+                    }
+                )
     except Exception as exc:
         info["loaded_models_error"] = str(exc)
 
@@ -160,11 +168,15 @@ def get_current_optimizations() -> dict:
     try:
         out = subprocess.run(
             [_lms_cli(), "runtime", "ls"],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         for line in out.stdout.splitlines():
             if "✓" in line:
-                info["active_runtime"] = line.split("@")[0].strip() if "@" in line else line.strip()
+                info["active_runtime"] = (
+                    line.split("@")[0].strip() if "@" in line else line.strip()
+                )
                 break
     except Exception:
         pass

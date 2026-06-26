@@ -1,20 +1,22 @@
 """Tests for Anthropic Messages streaming."""
 
-import pytest
-
 
 def test_anthropic_streaming(app_anthropic_final_answer):
     """POST /v1/messages with stream=True should return SSE."""
     client = app_anthropic_final_answer
-    response = client.post("/v1/messages", json={
-        "model": "claude-qwable-fast",
-        "max_tokens": 1024,
-        "messages": [{"role": "user", "content": "Hello"}],
-        "stream": True,
-    }, headers={
-        "x-api-key": "local",
-        "anthropic-version": "2023-06-01",
-    })
+    response = client.post(
+        "/v1/messages",
+        json={
+            "model": "claude-qwable-fast",
+            "max_tokens": 1024,
+            "messages": [{"role": "user", "content": "Hello"}],
+            "stream": True,
+        },
+        headers={
+            "x-api-key": "local",
+            "anthropic-version": "2023-06-01",
+        },
+    )
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
     body = response.text
@@ -26,16 +28,20 @@ def test_anthropic_streaming(app_anthropic_final_answer):
 def test_anthropic_streaming_tool_use(app_anthropic_tool_use):
     """POST /v1/messages with stream=True and tool_use."""
     client = app_anthropic_tool_use
-    response = client.post("/v1/messages", json={
-        "model": "claude-qwable-fast",
-        "max_tokens": 1024,
-        "tools": [{"name": "Bash", "input_schema": {}}],
-        "messages": [{"role": "user", "content": "List directory"}],
-        "stream": True,
-    }, headers={
-        "x-api-key": "local",
-        "anthropic-version": "2023-06-01",
-    })
+    response = client.post(
+        "/v1/messages",
+        json={
+            "model": "claude-qwable-fast",
+            "max_tokens": 1024,
+            "tools": [{"name": "Bash", "input_schema": {}}],
+            "messages": [{"role": "user", "content": "List directory"}],
+            "stream": True,
+        },
+        headers={
+            "x-api-key": "local",
+            "anthropic-version": "2023-06-01",
+        },
+    )
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
     body = response.text

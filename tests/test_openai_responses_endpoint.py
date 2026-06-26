@@ -1,17 +1,19 @@
 """Tests for OpenAI Responses endpoint."""
 
 import json
-import pytest
 
 
 def test_responses_final_answer(app_final_answer):
     """POST /v1/responses should return final answer."""
     client = app_final_answer
-    response = client.post("/v1/responses", json={
-        "model": "qwable-fast",
-        "input": "Hello",
-        "stream": False,
-    })
+    response = client.post(
+        "/v1/responses",
+        json={
+            "model": "qwable-fast",
+            "input": "Hello",
+            "stream": False,
+        },
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["object"] == "response"
@@ -24,12 +26,20 @@ def test_responses_final_answer(app_final_answer):
 def test_responses_tool_call(app_tool_call):
     """POST /v1/responses should return tool call."""
     client = app_tool_call
-    response = client.post("/v1/responses", json={
-        "model": "qwable-fast",
-        "input": "Read file",
-        "tools": [{"type": "function", "function": {"name": "read_file", "parameters": {}}}],
-        "stream": False,
-    })
+    response = client.post(
+        "/v1/responses",
+        json={
+            "model": "qwable-fast",
+            "input": "Read file",
+            "tools": [
+                {
+                    "type": "function",
+                    "function": {"name": "read_file", "parameters": {}},
+                }
+            ],
+            "stream": False,
+        },
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["output"][0]["type"] == "function_call"
@@ -40,12 +50,15 @@ def test_responses_tool_call(app_tool_call):
 def test_responses_debug_includes_trace_when_requested(app_heavy_debug_answer):
     """POST /v1/responses should include fusion trace only when debug metadata is true."""
     client = app_heavy_debug_answer
-    response = client.post("/v1/responses", json={
-        "model": "qwable-heavy",
-        "input": "Analyze",
-        "metadata": {"debug": True},
-        "stream": False,
-    })
+    response = client.post(
+        "/v1/responses",
+        json={
+            "model": "qwable-heavy",
+            "input": "Analyze",
+            "metadata": {"debug": True},
+            "stream": False,
+        },
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["output"][0]["text"] == "heavy answer"
@@ -60,11 +73,14 @@ def test_responses_debug_includes_trace_when_requested(app_heavy_debug_answer):
 def test_responses_debug_omitted_without_debug_metadata(app_heavy_debug_answer):
     """POST /v1/responses should not expose trace unless debug metadata is true."""
     client = app_heavy_debug_answer
-    response = client.post("/v1/responses", json={
-        "model": "qwable-heavy",
-        "input": "Analyze",
-        "stream": False,
-    })
+    response = client.post(
+        "/v1/responses",
+        json={
+            "model": "qwable-heavy",
+            "input": "Analyze",
+            "stream": False,
+        },
+    )
     assert response.status_code == 200
     data = response.json()
     assert "debug" not in data

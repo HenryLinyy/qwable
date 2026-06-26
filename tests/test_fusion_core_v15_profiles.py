@@ -22,7 +22,9 @@ def _image() -> ImageInput:
     )
 
 
-def _task(profile: str, *, images=None, tools=None, tool_results=None) -> ParsedAgentTask:
+def _task(
+    profile: str, *, images=None, tools=None, tool_results=None
+) -> ParsedAgentTask:
     return ParsedAgentTask(
         text="Please inspect the screenshot",
         tools=tools or [],
@@ -55,7 +57,9 @@ async def test_vision_evidence_is_injected_before_tool_results():
     core = FusionCore(FusionConfig())
     core.ollama = MagicMock()
     core.ds4 = MagicMock()
-    core.ollama.chat_completion.return_value = {"choices": [{"message": {"content": "ok"}}]}
+    core.ollama.chat_completion.return_value = {
+        "choices": [{"message": {"content": "ok"}}]
+    }
 
     task = _task(
         "fast-agent",
@@ -135,7 +139,10 @@ async def test_vision_pro_with_tools_routes_evidence_to_coder_agent():
 
     assert action.type == "tool_call"
     assert action.tool_name == "read_file"
-    assert "[VisionEvidence #1]" in core.ollama.chat_completion.call_args.kwargs["messages"][2]["content"]
+    assert (
+        "[VisionEvidence #1]"
+        in core.ollama.chat_completion.call_args.kwargs["messages"][2]["content"]
+    )
 
 
 @pytest.mark.asyncio
@@ -157,7 +164,11 @@ async def test_vision_heavy_extracts_evidence_and_unloads_before_ds4():
     core.ollama.chat_completion.side_effect = [
         {"choices": [{"message": {"content": "checker ok"}}]},
         {"choices": [{"message": {"content": "critic ok"}}]},
-        {"choices": [{"message": {"content": '{"type": "final_answer", "text": "approved"}'}}]},
+        {
+            "choices": [
+                {"message": {"content": '{"type": "final_answer", "text": "approved"}'}}
+            ]
+        },
     ]
 
     action = await core.execute(_task("vision-heavy", images=[_image()]))
@@ -178,7 +189,9 @@ async def test_agentic_and_hermes_pro_use_qwen36_profiles():
     core = FusionCore(cfg)
     core.ollama = MagicMock()
     core.ds4 = MagicMock()
-    core.ollama.chat_completion.return_value = {"choices": [{"message": {"content": "pro answer"}}]}
+    core.ollama.chat_completion.return_value = {
+        "choices": [{"message": {"content": "pro answer"}}]
+    }
 
     agentic = await core.execute(_task("agentic-pro"))
     hermes = await core.execute(_task("hermes-pro"))
@@ -196,7 +209,9 @@ async def test_optional_mlx_profiles_use_optional_models_without_changing_defaul
     core = FusionCore(cfg)
     core.ollama = MagicMock()
     core.ds4 = MagicMock()
-    core.ollama.chat_completion.return_value = {"choices": [{"message": {"content": "mlx answer"}}]}
+    core.ollama.chat_completion.return_value = {
+        "choices": [{"message": {"content": "mlx answer"}}]
+    }
 
     agentic_mlx = await core.execute(_task("agentic-mlx"))
     formatter_mlx = await core.execute(_task("formatter-mlx"))
@@ -252,7 +267,7 @@ def test_fast_max_tokens_default_keeps_thinking_reserve():
     # Sanity: must clear the thinking-model floor by a comfortable margin
     assert cfg.fast_max_tokens >= 1500  # ~500 thinking + ~1000 content
     # formatter-mlx profile should also be safe (it shares fast_max_tokens)
-    assert cfg.fast_max_tokens >= 600   # never below the agentic-mlx floor
+    assert cfg.fast_max_tokens >= 600  # never below the agentic-mlx floor
 
 
 @pytest.mark.asyncio
@@ -262,7 +277,9 @@ async def test_agentic_mlx_accepts_inputs_up_to_256k_chars():
     core = FusionCore(cfg)
     core.ollama = MagicMock()
     core.ds4 = MagicMock()
-    core.ollama.chat_completion.return_value = {"choices": [{"message": {"content": "ok"}}]}
+    core.ollama.chat_completion.return_value = {
+        "choices": [{"message": {"content": "ok"}}]
+    }
 
     # 200K chars - would have been rejected under the old 96K shared limit
     big_text = "a" * 200_000
@@ -283,7 +300,9 @@ async def test_agentic_mlx_accepts_inputs_up_to_256k_chars():
     assert "context limit exceeded" not in action.text
     core.ollama.chat_completion.assert_called_once()
     # It must have routed to qwen3.6 NVFP4
-    assert core.ollama.chat_completion.call_args.kwargs["model"] == cfg.model_agentic_mlx
+    assert (
+        core.ollama.chat_completion.call_args.kwargs["model"] == cfg.model_agentic_mlx
+    )
 
 
 @pytest.mark.asyncio

@@ -66,7 +66,9 @@ class AgentOrchestrator:
                 artifact_id=new_id("artifact"),
                 run_id=run.run_id,
                 kind="context_pack",
-                content=context_pack.to_prompt_text(self.config.agent_context_pack_max_chars),
+                content=context_pack.to_prompt_text(
+                    self.config.agent_context_pack_max_chars
+                ),
                 metadata={"workflow": workflow},
             )
         )
@@ -79,7 +81,9 @@ class AgentOrchestrator:
             latest_result = task.tool_results[-1]
             if _is_test_result(latest_result):
                 if latest_result.is_error:
-                    return await self._handle_test_failure(run, context_pack, latest_result, workflow)
+                    return await self._handle_test_failure(
+                        run, context_pack, latest_result, workflow
+                    )
                 return await self._finalize(run, context_pack, workflow)
 
             self._mark_current_step_done(run, latest_result)
@@ -114,14 +118,18 @@ class AgentOrchestrator:
                 workflow,
                 extra_trace={
                     "test_status": (
-                        "test_not_required" if workflow == "agentic-workflow" else "test_not_run"
+                        "test_not_required"
+                        if workflow == "agentic-workflow"
+                        else "test_not_run"
                     )
                 },
             )
 
         planner_selection = self.model_selector.select(workflow, "planner")
         planner_messages = build_planner_messages(task, context_pack)
-        planner_response = await self._call_with_fallback(planner_selection, planner_messages)
+        planner_response = await self._call_with_fallback(
+            planner_selection, planner_messages
+        )
         raw_plan = _response_content(planner_response)
 
         try:
@@ -167,7 +175,9 @@ class AgentOrchestrator:
         current_step = run.current_step()
         if current_step is None:
             run.status = "failed"
-            run.trace = self._trace(run, stage="planner", selection=planner_selection, status="failed")
+            run.trace = self._trace(
+                run, stage="planner", selection=planner_selection, status="failed"
+            )
             self.store.save_run(run)
             return FusionAction(
                 type="final_answer",
@@ -204,7 +214,9 @@ class AgentOrchestrator:
         if select_for_stage is None:
             return base
         wf_stage = (
-            WorkflowStage.EXECUTE_PATCH if stage == "executor" else WorkflowStage.REPAIR_PATCH
+            WorkflowStage.EXECUTE_PATCH
+            if stage == "executor"
+            else WorkflowStage.REPAIR_PATCH
         )
         try:
             selected = select_for_stage(wf_stage)
@@ -223,7 +235,9 @@ class AgentOrchestrator:
             reason=selected.reason,
         )
 
-    async def _call_with_fallback(self, selection: RoleSelection, messages: list[dict]) -> dict:
+    async def _call_with_fallback(
+        self, selection: RoleSelection, messages: list[dict]
+    ) -> dict:
         errors = []
         for model in selection.fallback_chain:
             try:
@@ -242,7 +256,9 @@ class AgentOrchestrator:
                 continue
         raise RuntimeError(f"all fallback models failed: {errors}")
 
-    def _append_tool_results(self, run: AgentRun, tool_results: list[ToolResult]) -> None:
+    def _append_tool_results(
+        self, run: AgentRun, tool_results: list[ToolResult]
+    ) -> None:
         step = run.current_step()
         for result in tool_results:
             name = result.name or "unknown"
@@ -274,7 +290,9 @@ class AgentOrchestrator:
         step.status = "done"
         step.output = result.content
 
-    async def _review_plan(self, run: AgentRun, context_pack, workflow: str) -> FusionAction | None:
+    async def _review_plan(
+        self, run: AgentRun, context_pack, workflow: str
+    ) -> FusionAction | None:
         selection = self.model_selector.select(workflow, "plan_critic")
         run.status = "reviewing_plan"
         critic_messages = build_plan_critic_messages(run, context_pack)
@@ -324,7 +342,9 @@ class AgentOrchestrator:
             trace=run.trace,
         )
 
-    async def _execute_current_step(self, run: AgentRun, context_pack, workflow: str) -> FusionAction:
+    async def _execute_current_step(
+        self, run: AgentRun, context_pack, workflow: str
+    ) -> FusionAction:
         current_step = run.current_step()
         selection = self._executor_repair_selection(workflow, "executor")
         if current_step is None:
@@ -336,7 +356,9 @@ class AgentOrchestrator:
                     metadata={"reason": "executor_step_missing"},
                 )
             )
-            run.trace = self._trace(run, stage="executor", selection=selection, status="failed")
+            run.trace = self._trace(
+                run, stage="executor", selection=selection, status="failed"
+            )
             self.store.save_run(run)
             return FusionAction(
                 type="final_answer",
@@ -372,7 +394,9 @@ class AgentOrchestrator:
         run.status = "completed"
         current_step.status = "done"
         current_step.output = raw_executor
-        run.trace = self._trace(run, stage="executor", selection=selection, status="completed")
+        run.trace = self._trace(
+            run, stage="executor", selection=selection, status="completed"
+        )
         self.store.save_run(run)
         return FusionAction(
             type="final_answer",
@@ -466,7 +490,9 @@ class AgentOrchestrator:
                 metadata={"stage": "test"},
             )
         )
-        run.trace = self._trace(run, stage="test", selection=selection, status="testing")
+        run.trace = self._trace(
+            run, stage="test", selection=selection, status="testing"
+        )
         self.store.save_run(run)
         return FusionAction(
             type="tool_call",
@@ -523,7 +549,9 @@ class AgentOrchestrator:
 
         run.repair_count += 1
         run.status = "repairing"
-        repair_messages = build_repair_messages(run, context_pack, latest_result.content)
+        repair_messages = build_repair_messages(
+            run, context_pack, latest_result.content
+        )
         repair_response = await self._call_with_fallback(selection, repair_messages)
         raw_repair = _response_content(repair_response)
         try:
@@ -691,10 +719,15 @@ class AgentOrchestrator:
         selection = self.model_selector.select(workflow, "finalizer")
         run.status = "finalizing"
         finalizer_messages = build_finalizer_messages(run, context_pack)
-        finalizer_response = await self._call_with_fallback(selection, finalizer_messages)
+        finalizer_response = await self._call_with_fallback(
+            selection, finalizer_messages
+        )
         final_text = _response_content(finalizer_response)
         current_step = run.current_step()
-        if current_step is not None and current_step.status not in {"blocked", "failed"}:
+        if current_step is not None and current_step.status not in {
+            "blocked",
+            "failed",
+        }:
             current_step.status = "done"
         run.status = "completed"
         run.artifacts.append(
@@ -903,7 +936,9 @@ class AgentOrchestrator:
                 metadata={"stage": stage},
             )
         )
-        run.trace = self._trace(run, stage=stage, selection=selection, status="waiting_for_tool")
+        run.trace = self._trace(
+            run, stage=stage, selection=selection, status="waiting_for_tool"
+        )
         self.store.save_run(run)
         return FusionAction(
             type="tool_call",
@@ -1185,7 +1220,9 @@ def _extract_tool_call(payload: dict[str, Any]) -> dict[str, Any] | None:
     return {"name": name, "input": tool_input}
 
 
-def _tool_action_arguments_to_tool_call(payload: dict[str, Any]) -> dict[str, Any] | None:
+def _tool_action_arguments_to_tool_call(
+    payload: dict[str, Any],
+) -> dict[str, Any] | None:
     tool = payload.get("tool")
     action = payload.get("action")
     arguments = payload.get("arguments")
@@ -1207,7 +1244,14 @@ def _tool_action_arguments_to_tool_call(payload: dict[str, Any]) -> dict[str, An
             return {"name": "shell", "input": {"command": command}}
 
     # Common direct patch-protocol aliases.
-    if tool_norm in {"read_file", "search_files", "list_files", "edit_file", "apply_patch", "run_tests"}:
+    if tool_norm in {
+        "read_file",
+        "search_files",
+        "list_files",
+        "edit_file",
+        "apply_patch",
+        "run_tests",
+    }:
         return {"name": tool_norm, "input": arguments}
 
     return None

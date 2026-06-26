@@ -7,7 +7,6 @@ import pytest
 
 from qwable.mlx_optimizations import (
     RECOMMENDED_CONTEXT_LENGTH,
-    SETTINGS_PATH,
     apply_recommended_settings,
     get_current_optimizations,
 )
@@ -17,11 +16,15 @@ from qwable.mlx_optimizations import (
 def fake_settings(tmp_path: Path, monkeypatch):
     """Provide a fake settings.json for tests."""
     fake_path = tmp_path / "settings.json"
-    fake_path.write_text(json.dumps({
-        "language": "zh_Hant",
-        "defaultContextLength": {"type": "custom", "value": 8192},
-        "configPresetInclusiveness": {"speculativeDecoding": False},
-    }))
+    fake_path.write_text(
+        json.dumps(
+            {
+                "language": "zh_Hant",
+                "defaultContextLength": {"type": "custom", "value": 8192},
+                "configPresetInclusiveness": {"speculativeDecoding": False},
+            }
+        )
+    )
     monkeypatch.setattr("qwable.mlx_optimizations.SETTINGS_PATH", fake_path)
     return fake_path
 

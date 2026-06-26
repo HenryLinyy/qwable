@@ -4,7 +4,9 @@ from qwable.schemas import ToolSpec
 from typing import Literal
 
 
-def normalize_openai_tools(tools: list[dict], source_protocol: Literal["openai_responses", "openai_chat"]) -> list[ToolSpec]:
+def normalize_openai_tools(
+    tools: list[dict], source_protocol: Literal["openai_responses", "openai_chat"]
+) -> list[ToolSpec]:
     """Normalize OpenAI-style tool definitions to ToolSpec list.
 
     Supports both flat format (type, function, name, parameters)
@@ -25,13 +27,15 @@ def normalize_openai_tools(tools: list[dict], source_protocol: Literal["openai_r
         if not name:
             continue
 
-        result.append(ToolSpec(
-            name=name,
-            description=description,
-            input_schema=params,
-            source_protocol=source_protocol,
-            raw=t,
-        ))
+        result.append(
+            ToolSpec(
+                name=name,
+                description=description,
+                input_schema=params,
+                source_protocol=source_protocol,
+                raw=t,
+            )
+        )
     return result
 
 
@@ -46,11 +50,13 @@ def normalize_anthropic_tools(tools: list[dict]) -> list[ToolSpec]:
         input_schema = t.get("input_schema", {})
         if not name:
             continue
-        result.append(ToolSpec(
-            name=name,
-            description=description,
-            input_schema=input_schema,
-            source_protocol="anthropic_messages",
-            raw=t,
-        ))
+        result.append(
+            ToolSpec(
+                name=name,
+                description=description,
+                input_schema=input_schema,
+                source_protocol="anthropic_messages",
+                raw=t,
+            )
+        )
     return result

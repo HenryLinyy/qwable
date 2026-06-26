@@ -116,7 +116,11 @@ class ConversationStore:
             conv = Conversation.from_dict(data)
             # Check TTL
             if (time.time() - conv.updated_at) > self.ttl_seconds:
-                logger.info("conversation %s expired (TTL %ds), deleting", conv_id, self.ttl_seconds)
+                logger.info(
+                    "conversation %s expired (TTL %ds), deleting",
+                    conv_id,
+                    self.ttl_seconds,
+                )
                 self.delete(conv_id)
                 return None
             return conv
@@ -124,7 +128,9 @@ class ConversationStore:
             logger.warning("failed to read conversation %s: %s", conv_id, exc)
             return None
 
-    def append(self, conv_id: str, message: ConversationMessage) -> Optional[Conversation]:
+    def append(
+        self, conv_id: str, message: ConversationMessage
+    ) -> Optional[Conversation]:
         """Append a message to an existing conversation. Returns updated conv or None."""
         # Guard the read-modify-write so concurrent appends don't clobber each other.
         with self._lock:
@@ -181,7 +187,6 @@ class ConversationStore:
         """Delete all expired conversations. Returns count deleted."""
         count = 0
         for path in list(self.store_dir.glob("conv-*.json")):
-            conv_id = path.stem
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
                 updated_at = data.get("updated_at", 0)

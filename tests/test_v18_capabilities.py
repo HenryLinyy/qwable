@@ -89,6 +89,7 @@ def test_qwythos_allowed_for_long_context_role():
 def test_qwable_spec_uses_settings_values():
     """Spec must reflect the live settings (env overrides)."""
     import os
+
     os.environ["MODEL_QWABLE"] = "custom-qwable-7b"
     os.environ["MODEL_QWABLE_CONTEXT_LIMIT"] = "16384"
     try:

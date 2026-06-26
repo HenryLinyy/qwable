@@ -23,7 +23,9 @@ def test_decide_repairs_actionable_failure_under_limits():
     run = _run_with_step()
     config = FusionConfig(agent_max_repair_attempts=2)
 
-    decision = RepairLoop(config).decide(run, "AssertionError in tests/test_agent_store.py")
+    decision = RepairLoop(config).decide(
+        run, "AssertionError in tests/test_agent_store.py"
+    )
 
     assert decision.should_repair is True
     assert decision.reason == "repairable_failure"
@@ -38,7 +40,9 @@ def test_decide_stops_after_max_repair_attempts():
     run.repair_count = 2
     config = FusionConfig(agent_max_repair_attempts=2)
 
-    decision = RepairLoop(config).decide(run, "AssertionError in tests/test_agent_store.py")
+    decision = RepairLoop(config).decide(
+        run, "AssertionError in tests/test_agent_store.py"
+    )
 
     assert decision.should_repair is False
     assert decision.reason == "max_repair_attempts_exceeded"
@@ -51,7 +55,9 @@ def test_decide_stops_after_step_attempt_limit():
     run = _run_with_step(attempt_count=3)
     config = FusionConfig(agent_max_repair_attempts=5)
 
-    decision = RepairLoop(config).decide(run, "AssertionError in tests/test_agent_store.py")
+    decision = RepairLoop(config).decide(
+        run, "AssertionError in tests/test_agent_store.py"
+    )
 
     assert decision.should_repair is False
     assert decision.reason == "step_attempt_limit_exceeded"

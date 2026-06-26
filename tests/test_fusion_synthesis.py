@@ -1,7 +1,5 @@
 """Tests for fusion synthesis prompt builder and output parser."""
 
-import pytest
-
 from qwable.fusion_schemas import PanelResponse, SynthesisInput
 from qwable.fusion_synthesis import (
     FUSION_SECTION_NAMES,
@@ -21,7 +19,13 @@ def test_build_synthesis_includes_system_prompt_with_all_5_sections():
         preset_name="quality",
     )
     system, user = build_synthesis_prompt(si)
-    for header in ["## Final Answer", "## Consensus", "## Contradictions", "## Blind Spots", "## Per-model Notes"]:
+    for header in [
+        "## Final Answer",
+        "## Consensus",
+        "## Contradictions",
+        "## Blind Spots",
+        "## Per-model Notes",
+    ]:
         assert header in system, f"system prompt missing header {header}"
 
 

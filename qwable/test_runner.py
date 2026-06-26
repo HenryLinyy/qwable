@@ -17,7 +17,9 @@ _EXPLICIT_TEST_RE = re.compile(
 class TestCommandPlanner:
     """Infer test commands from context and produce standard tool-call objects."""
 
-    def infer_test_commands(self, context_pack: ContextPack, workflow: str) -> list[str]:
+    def infer_test_commands(
+        self, context_pack: ContextPack, workflow: str
+    ) -> list[str]:
         explicit_command = self._find_explicit_test_command(context_pack)
         if explicit_command:
             return [explicit_command]
@@ -48,6 +50,11 @@ class TestCommandPlanner:
         return None
 
     def _looks_like_python_project(self, lower_paths: set[str]) -> bool:
-        if lower_paths.intersection({"pyproject.toml", "pytest.ini", "setup.cfg", "setup.py"}):
+        if lower_paths.intersection(
+            {"pyproject.toml", "pytest.ini", "setup.cfg", "setup.py"}
+        ):
             return True
-        return any(path.startswith("tests/test_") or path.endswith("_test.py") for path in lower_paths)
+        return any(
+            path.startswith("tests/test_") or path.endswith("_test.py")
+            for path in lower_paths
+        )

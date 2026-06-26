@@ -101,6 +101,7 @@ def test_capability_gate_still_blocks_misconfig():
         build_qwable_spec,
         assert_model_allowed_for_role,
     )
+
     cfg = FusionConfig()
     cfg.model_role_judge = cfg.model_qwable  # misconfig: Qwable as judge
     spec = build_qwable_spec(cfg)

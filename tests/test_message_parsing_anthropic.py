@@ -47,12 +47,21 @@ def test_parse_with_tool_result():
     body = {
         "model": "claude-qwable-fast",
         "max_tokens": 1024,
-        "tools": [{"name": "Bash", "description": "Shell", "input_schema": {"type": "object"}}],
+        "tools": [
+            {"name": "Bash", "description": "Shell", "input_schema": {"type": "object"}}
+        ],
         "messages": [
             {"role": "user", "content": "List directory"},
             {
                 "role": "assistant",
-                "content": [{"type": "tool_use", "id": "toolu_1", "name": "Bash", "input": {"command": "ls"}}],
+                "content": [
+                    {
+                        "type": "tool_use",
+                        "id": "toolu_1",
+                        "name": "Bash",
+                        "input": {"command": "ls"},
+                    }
+                ],
             },
             {
                 "role": "user",
